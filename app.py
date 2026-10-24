@@ -61,11 +61,6 @@ st.write(
     "Build your order below and see your estimated "
     "medicine bill instantly."
 )
-st.subheader("Pharmacy Medicine Bill Calculator")
-st.write(
-    "Calculate your estimated medicine bill quickly "
-    "with a clear breakdown of your order."
-)
 
 # Store illustrative medicine prices in a dictionary
 medicine_prices = {
