@@ -259,8 +259,7 @@ def calculate_bill(items, discount_rate, delivery, membership):
         "total": max(0.0, total),
     }
 
-# 5. 
-# Custom branded header with medicine and tablet doodles
+# 5. Custom branded header with medicine and tablet doodles
 st.markdown("""
 <div class="medibill-header">
     <div class="medibill-brand">
@@ -280,6 +279,12 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+st.write(
+    "Create an estimated medicine bill, apply eligible discounts, "
+    "and review your total in one simple place."
+)
+
 
 st.write(
     "Create an estimated medicine bill, apply eligible discounts, "
