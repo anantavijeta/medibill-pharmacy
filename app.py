@@ -10,206 +10,31 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. 
-# MediBill visual identity: pink, royal blue, sage and peacock green
+# 2. Add custom CSS for a clean pharmacy-inspired interface
 st.markdown("""
 <style>
-/* ---------- BRAND COLOURS ---------- */
-:root {
-    --pink: #F5A6C8;
-    --pink-light: #FFF0F6;
-    --royal-blue: #4169E1;
-    --sage: #B7CBB7;
-    --sage-light: #EFF5EF;
-    --peacock: #005B50;
-    --peacock-dark: #003F38;
-    --cream: #FFFAFC;
-    --text: #263C37;
-}
-
-/* ---------- MAIN WEBSITE BACKGROUND ---------- */
 .stApp {
-    background-color: var(--cream);
-    color: var(--text);
+    background-color: #F7FAF8;
 }
-
 .block-container {
     padding-top: 2rem;
-    padding-bottom: 3rem;
-    max-width: 1200px;
+    padding-bottom: 2rem;
 }
-
-/* ---------- HEADINGS ---------- */
 h1, h2, h3 {
-    color: var(--peacock) !important;
-    font-weight: 750 !important;
-    letter-spacing: -0.5px;
+    color: #155C43;
 }
-
-/* ---------- SIDEBAR ---------- */
-section[data-testid="stSidebar"] {
-    background: linear-gradient(
-        180deg,
-        #EFF5EF 0%,
-        #FCEAF2 100%
-    );
-    border-right: 2px solid #D9E7DC;
-}
-
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3 {
-    color: var(--peacock) !important;
-}
-
-/* ---------- METRIC CARDS ---------- */
 div[data-testid="stMetric"] {
     background: white;
-    border: 1px solid #D7E5DA;
-    border-top: 4px solid var(--pink);
-    padding: 18px;
-    border-radius: 16px;
-    box-shadow: 0 4px 14px rgba(0, 91, 80, 0.06);
-}
-
-div[data-testid="stMetricLabel"] {
-    color: var(--peacock) !important;
-}
-
-div[data-testid="stMetricValue"] {
-    color: var(--royal-blue) !important;
-    font-weight: 750;
-}
-
-/* ---------- BUTTONS ---------- */
-.stButton button,
-.stDownloadButton button {
-    background: var(--peacock);
-    color: white;
-    border: 2px solid var(--peacock);
-    border-radius: 12px;
-    padding: 0.55rem 1rem;
-    font-weight: 650;
-    transition: all 0.2s ease;
-}
-
-.stButton button:hover,
-.stDownloadButton button:hover {
-    background: var(--royal-blue);
-    border-color: var(--royal-blue);
-    color: white;
-}
-
-/* ---------- INPUT BOXES ---------- */
-div[data-baseweb="select"] > div,
-div[data-baseweb="input"] > div {
-    background-color: white;
-    border-radius: 10px;
-    border-color: var(--sage);
-}
-
-/* ---------- CHECKBOXES AND RADIO BUTTONS ---------- */
-div[data-testid="stCheckbox"] label,
-div[data-testid="stRadio"] label {
-    color: var(--peacock-dark);
-}
-
-/* ---------- CONTAINERS AND PRODUCT CARDS ---------- */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-color: #D8E5DB;
-    border-radius: 16px;
-}
-
-/* ---------- INFO, SUCCESS AND WARNING BOXES ---------- */
-div[data-testid="stAlert"] {
+    border: 1px solid #DCE9E1;
+    padding: 16px;
     border-radius: 12px;
 }
-
-/* ---------- TABLE ---------- */
-div[data-testid="stDataFrame"] {
-    border: 1px solid #D8E5DB;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-/* ---------- MEDICINE DOODLE HEADER ---------- */
-.medibill-header {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(
-        125deg,
-        #FFF0F6 0%,
-        #EFF5EF 55%,
-        #E8EEFF 100%
-    );
-    border: 1px solid #E6DCE8;
-    border-radius: 24px;
-    padding: 30px;
-    margin-bottom: 22px;
-}
-
-.medibill-brand {
-    color: #005B50;
-    font-size: 2.65rem;
-    font-weight: 850;
-    letter-spacing: -1.5px;
-    line-height: 1.2;
-}
-
-.medibill-tagline {
-    color: #4169E1;
-    font-size: 1rem;
-    margin-top: 8px;
-    font-weight: 550;
-}
-
-.medibill-doodle {
-    font-size: 1.8rem;
-    letter-spacing: 10px;
-    margin-top: 14px;
-}
-
-.medibill-label {
-    display: inline-block;
-    background: #F5A6C8;
-    color: #4D2340;
-    border-radius: 30px;
-    padding: 6px 13px;
-    font-size: 0.78rem;
-    font-weight: 750;
-    margin-top: 12px;
-}
-
-/* ---------- SECTION LABELS ---------- */
-.section-label {
-    color: #005B50;
-    font-weight: 750;
-    font-size: 1.1rem;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #B7CBB7;
-    margin-bottom: 15px;
-}
-
-/* ---------- SMALL SCREEN SUPPORT ---------- */
-@media (max-width: 640px) {
-    .medibill-header {
-        padding: 20px;
-        border-radius: 18px;
-    }
-
-    .medibill-brand {
-        font-size: 2rem;
-    }
-
-    .medibill-doodle {
-        font-size: 1.4rem;
-        letter-spacing: 5px;
-    }
+.stButton button {
+    border-radius: 8px;
+    font-weight: 600;
 }
 </style>
 """, unsafe_allow_html=True)
-
-
 
 # 3. Define the illustrative medicine catalogue
 medicine_catalogue = {
@@ -259,38 +84,14 @@ def calculate_bill(items, discount_rate, delivery, membership):
         "total": max(0.0, total),
     }
 
-# 5. Custom branded header with medicine and tablet doodles
-st.markdown("""
-<div class="medibill-header">
-    <div class="medibill-brand">
-        MediBill 💊
-    </div>
+# 5. Display the website heading
+st.title("💊 MediBill")
+st.caption("SMART PHARMACY BILLING | Simple • Transparent • Convenient")
 
-    <div class="medibill-tagline">
-        Your health essentials, clearly priced.
-    </div>
-
-    <div class="medibill-doodle">
-        💊 🩹 🧴 💗 🩺 💉
-    </div>
-
-    <div class="medibill-label">
-        SMART PHARMACY BILLING
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.write(
-    "Create an estimated medicine bill, apply eligible discounts, "
-    "and review your total in one simple place."
+st.info(
+    "Create an estimated medicine bill, apply eligible discounts "
+    "and review the final amount before checkout."
 )
-
-
-st.write(
-    "Create an estimated medicine bill, apply eligible discounts, "
-    "and review your total in one simple place."
-)
-
 
 # 6. Organize the website into a sidebar and main billing area
 with st.sidebar:
@@ -439,6 +240,7 @@ st.caption(
     "discounts and fees are illustrative. It is not a live pharmacy "
     "catalogue, prescription service or medical recommendation system."
 )
+
 
 
 
