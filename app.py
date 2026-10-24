@@ -57,57 +57,6 @@ st.html("""
 </div>
 """)
 
-
-
-
-# Display the website title and introduction
-st.title("💊 MediBill")
-
-# Custom MediBill header with small decorative doodles
-st.markdown("""
-<div style="
-    background: linear-gradient(120deg, #E2EBDD, #F5E5ED);
-    padding: 28px;
-    border-radius: 20px;
-    border: 1px solid #D5E1D0;
-    margin-bottom: 24px;
-">
-    <div style="
-        font-size: 14px;
-        color: #3655B3;
-        letter-spacing: 2px;
-        font-weight: 600;
-    ">
-        ✳ YOUR FRIENDLY PHARMACY CALCULATOR ✳
-    </div>
-
-    <h1 style="
-        color: #294634;
-        font-size: 42px;
-        margin: 8px 0 4px 0;
-    ">
-        💊 MediBill
-        <span style="color: #D987A9;">♡</span>
-    </h1>
-
-    <p style="
-        color: #54745C;
-        font-size: 16px;
-        margin-bottom: 8px;
-    ">
-        Simple billing. Clear totals. A little more care.
-    </p>
-
-    <div style="
-        color: #3655B3;
-        font-size: 18px;
-        letter-spacing: 8px;
-    ">
-        ✿  +  ☆  ✿
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
 st.write(
     "Build your order below and see your estimated "
     "medicine bill instantly."
