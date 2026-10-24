@@ -56,6 +56,11 @@ st.html("""
     </div>
 </div>
 """)
+st.subheader("Pharmacy Medicine Bill Calculator")
+st.write(
+    "Calculate your estimated medicine bill quickly "
+    "with a clear breakdown of your order."
+)
 
 st.write(
     "Build your order below and see your estimated "
