@@ -259,14 +259,33 @@ def calculate_bill(items, discount_rate, delivery, membership):
         "total": max(0.0, total),
     }
 
-# 5. Display the website heading
-st.title("💊 MediBill")
-st.caption("SMART PHARMACY BILLING | Simple • Transparent • Convenient")
+# 5. 
+# Custom branded header with medicine and tablet doodles
+st.markdown("""
+<div class="medibill-header">
+    <div class="medibill-brand">
+        MediBill 💊
+    </div>
 
-st.info(
-    "Create an estimated medicine bill, apply eligible discounts "
-    "and review the final amount before checkout."
+    <div class="medibill-tagline">
+        Your health essentials, clearly priced.
+    </div>
+
+    <div class="medibill-doodle">
+        💊 🩹 🧴 💗 🩺 💉
+    </div>
+
+    <div class="medibill-label">
+        SMART PHARMACY BILLING
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.write(
+    "Create an estimated medicine bill, apply eligible discounts, "
+    "and review your total in one simple place."
 )
+
 
 # 6. Organize the website into a sidebar and main billing area
 with st.sidebar:
