@@ -1,4 +1,99 @@
-    "Quantity (packs or units)",
+import streamlit as st
+
+# MediBill: Pharmacy Medicine Bill Calculator
+st.set_page_config(
+    page_title="MediBill | Pharmacy Calculator",
+    page_icon="💊",
+    layout="centered",
+)
+
+# ---------------------------------------------------------
+# MediBill theme: sage green, ivory, black, white, and lilac
+# ---------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    :root {
+        --sage: #A3B18A;
+        --sage-dark: #626A55;
+        --sage-light: #E7EBD9;
+        --ivory: #F7F3E8;
+        --white: #FFFFFF;
+        --black: #222222;
+        --lilac: #9A83BC;
+        --border: #D9DDCD;
+    }
+
+    .stApp {
+        background-color: var(--ivory);
+        color: var(--black);
+    }
+
+    .block-container {
+        max-width: 1050px;
+        padding-top: 2.2rem;
+        padding-bottom: 3rem;
+    }
+
+    h1, h2, h3 {
+        color: var(--black) !important;
+        letter-spacing: -0.5px;
+    }
+
+    h1 {
+        font-weight: 750 !important;
+    }
+
+    p, label, .stMarkdown {
+        color: var(--black);
+    }
+
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div {
+        background-color: var(--white);
+        border-color: var(--border);
+        border-radius: 10px;
+    }
+
+    .stButton > button {
+        background-color: var(--sage);
+        color: var(--black);
+        border: 1px solid #8E9E75;
+        border-radius: 12px;
+        font-weight: 650;
+        transition: all 0.2s ease;
+    }
+
+    .stButton > button:hover {
+        background-color: #8E9E75;
+        color: var(--white);
+        border-color: #8E9E75;
+    }
+
+    div[data-testid="stMetric"] {
+        background-color: var(--white);
+        border: 1px solid #E3E0D6;
+        border-radius: 14px;
+        padding: 18px;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: var(--sage-dark);
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: var(--black);
+        font-weight: 700;
+    }
+
+    div[data-testid="stExpander"] {
+        background-color: var(--white);
+        border: 1px solid #E3E0D6;
+        border-radius: 12px;
+    }
+
+    hr {
+        border-color: var(--border);    "Quantity (packs or units)",
     min_value=1,
     max_value=100,
     value=1,
@@ -115,5 +210,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
