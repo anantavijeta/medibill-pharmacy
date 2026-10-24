@@ -116,23 +116,52 @@ final_total = (
     + delivery_fee
 )
 
-# Display the bill breakdown
-st.write(f"**Medicine subtotal:** ₹{subtotal:,.2f}")
-st.write(f"**Discount:** −₹{discount_amount:,.2f}")
-st.write(f"**Membership benefit:** −₹{membership_discount:,.2f}")
-st.write(f"**Delivery fee:** ₹{delivery_fee:,.2f}")
 
+# Display a structured bill summary
 st.divider()
+st.header("3. Your Order Summary")
 
-# Highlight the final bill amount
-st.success(f"Estimated Total: ₹{final_total:,.2f}")
+# Display the main financial figures in separate columns
+col1, col2, col3 = st.columns(3)
 
-# Explain the limitations of the demonstration
-st.caption(
-    "Educational demo using illustrative prices. "
-    "Not a live pharmacy catalogue or medical recommendation."
+col1.metric(
+    "Subtotal",
+    f"₹{subtotal:,.2f}"
 )
 
+col2.metric(
+    "Total Savings",
+    f"₹{discount_amount + membership_discount:,.2f}"
+)
 
+col3.metric(
+    "Final Amount",
+    f"₹{final_total:,.2f}"
+)
 
+# Show a detailed breakdown for transparency
+with st.expander("View bill breakdown", expanded=True):
+    st.write(f"**Selected medicine:** {medicine}")
+    st.write(f"**Quantity:** {quantity}")
+    st.write(
+        f"**Unit price:** ₹{medicine_prices[medicine]:,.2f}"
+    )
 
+    if add_second and second_medicine is not None:
+        st.write(
+            f"**Second medicine:** {second_medicine}"
+        )
+        st.write(
+            f"**Second quantity:** {second_quantity}"
+        )
+
+    st.write(f"**Subtotal:** ₹{subtotal:,.2f}")
+    st.write(f"**Discount:** −₹{discount_amount:,.2f}")
+    st.write(
+        f"**Membership benefit:** "
+        f"−₹{membership_discount:,.2f}"
+    )
+    st.write(f"**Delivery fee:** ₹{delivery_fee:,.2f}")
+
+    st.divider()
+    st.success(f"Amount Payable: ₹{final_total:,.2f}")
