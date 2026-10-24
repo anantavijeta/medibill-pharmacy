@@ -1,207 +1,17 @@
-
-import streamlit as st
-
-# MediBill: Pharmacy Medicine Bill Calculator
-
-# Configure the browser tab and page layout
-st.set_page_config(
-    page_title="MediBill | Pharmacy Calculator",
-    page_icon="💊",
-    layout="centered"
-)
-
-# MediBill visual theme: sage, ivory, black and lilac
-st.markdown("""
-<style>
-    /* Main page background and typography */
-    .stApp {
-        background-color: #F7F3E8;
-        color: #222222;
-    }
-
-    /* Main content spacing */
-    .block-container {
-        max-width: 1050px;
-        padding-top: 2.2rem;
-        padding-bottom: 3rem;
-    }
-
-    /* Headings */
-    h1, h2, h3 {
-        color: #222222 !important;
-        letter-spacing: -0.5px;
-    }
-
-    /* Main title */
-    h1 {
-        font-weight: 750 !important;
-    }
-
-    /* Paragraphs and labels */
-    p, label, .stMarkdown {
-        color: #222222;
-    }
-
-    /* Input fields */
-    div[data-baseweb="select"] > div,
-    div[data-baseweb="input"] > div {
-        background-color: #FFFFFF;
-        border-color: #D9DDCD;
-        border-radius: 10px;
-    }
-
-    /* Primary buttons */
-    .stButton > button {
-        background-color: #A3B18A;
-        color: #222222;
-        border: 1px solid #8E9E75;
-        border-radius: 12px;
-        font-weight: 650;
-        transition: all 0.2s ease;
-    }
-
-    .stButton > button:hover {
-        background-color: #8E9E75;
-        color: #FFFFFF;
-        border-color: #8E9E75;
-    }
-
-    /* Metrics */
-    div[data-testid="stMetric"] {
-        background-color: #FFFFFF;
-        border: 1px solid #E3E0D6;
-        border-radius: 14px;
-        padding: 18px;
-    }
-
-    div[data-testid="stMetricLabel"] {
-        color: #626A55;
-    }
-
-    div[data-testid="stMetricValue"] {
-        color: #222222;
-        font-weight: 700;
-    }
-
-    /* Expanders and containers */
-    div[data-testid="stExpander"] {
-        background-color: #FFFFFF;
-        border: 1px solid #E3E0D6;
-        border-radius: 12px;
-    }
-
-    /* Dividers */
-    hr {
-        border-color: #D9DDCD;
-    }
-
-    /* Success message */
-    div[data-testid="stAlert"] {
-        border-radius: 12px;
-    }
-
-    /* Checkbox accent */
-    div[data-testid="stCheckbox"] {
-        accent-color: #A3B18A;
-    }
-
-    /* Small decorative footer */
-    .medi-footer {
-        text-align: center;
-        color: #777168;
-        font-size: 13px;
-        padding-top: 24px;
-    }
-
-    .medi-doodle {
-        color: #9A83BC;
-        font-size: 18px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-# Display the website title and introduction
-
-# Branded header with a subtle decorative accent
-st.markdown("""
-<div style="
-    background: #E7EBD9;
-    border: 1px solid #D9DDCD;
-    border-radius: 18px;
-    padding: 25px;
-    margin-bottom: 22px;
-">
-    <div style="
-        color: #8E9E75;
-        font-size: 13px;
-        letter-spacing: 2px;
-        font-weight: 700;
-    ">YOUR EVERYDAY PHARMACY COMPANION</div>
-
-    <div style="
-        font-size: 38px;
-        font-weight: 800;
-        color: #222222;
-        margin-top: 5px;
-    ">♡ MediBill <span style="color:#9A83BC;">✳</span></div>
-
-    <div style="color:#626A55; font-size:15px;">
-        A little more clarity in every purchase.
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.write(
-    "Create your medicine order below and "
-    "get a clear breakdown of your estimated bill."
-)
-
-st.write(
-    "Calculate your estimated medicine bill quickly "
-    "with a clear breakdown of your order."
-)
-
-# Store illustrative medicine prices in a dictionary
-medicine_prices = {
-    "Paracetamol 500 mg": 30.0,
-    "Cetirizine 10 mg": 45.0,
-    "ORS Sachets": 25.0,
-    "Vitamin C Tablets": 80.0,
-    "Antacid Tablets": 55.0
-}
-
-st.divider()
-st.header("1. Create Your Order")
-
-# Input 1: Select the medicine
-medicine = st.selectbox(
-    "Choose a medicine",
-    list(medicine_prices.keys())
-)
-
-# Input 2: Enter the quantity
-quantity = st.number_input(
     "Quantity (packs or units)",
     min_value=1,
     max_value=100,
     value=1,
-    step=1
+    step=1,
 )
 
-# Input 3: Select the discount option
 discount_option = st.selectbox(
     "Choose a discount",
-    ["No Discount", "5% Discount", "10% Discount"]
+    ["No Discount", "5% Discount", "10% Discount"],
 )
 
-# Input 4: Choose delivery
 delivery = st.checkbox("Add delivery service (₹30)")
-
-# Input 5: Choose membership
 membership = st.checkbox("Apply eligible member benefit (₹10 off)")
-
-# Input 6: Select another medicine
 add_second = st.checkbox("Add a second medicine")
 
 second_medicine = None
@@ -211,7 +21,7 @@ if add_second:
     second_medicine = st.selectbox(
         "Choose your second medicine",
         list(medicine_prices.keys()),
-        key="second_medicine"
+        key="second_medicine",
     )
     second_quantity = st.number_input(
         "Quantity of second medicine",
@@ -219,20 +29,17 @@ if add_second:
         max_value=100,
         value=1,
         step=1,
-        key="second_quantity"
+        key="second_quantity",
     )
 
-st.divider()
-st.header("2. Your Bill")
-
-# Calculate the first medicine's subtotal
+# ---------------------------------------------------------
+# Bill calculations
+# ---------------------------------------------------------
 subtotal = medicine_prices[medicine] * quantity
 
-# Add the second medicine only when selected
 if add_second and second_medicine is not None:
     subtotal += medicine_prices[second_medicine] * second_quantity
 
-# Apply the discount using conditional statements
 if discount_option == "5% Discount":
     discount_rate = 0.05
 elif discount_option == "10% Discount":
@@ -241,18 +48,15 @@ else:
     discount_rate = 0.0
 
 discount_amount = subtotal * discount_rate
-
-# Calculate optional fees and membership benefit
 delivery_fee = 30.0 if delivery else 0.0
 membership_discount = 10.0 if membership else 0.0
 
-# Prevent the membership benefit from exceeding the remaining bill
+# Do not let the membership benefit reduce the medicine total below zero.
 membership_discount = min(
     membership_discount,
-    subtotal - discount_amount
+    max(0.0, subtotal - discount_amount),
 )
 
-# Calculate the final estimated amount
 final_total = (
     subtotal
     - discount_amount
@@ -260,60 +64,56 @@ final_total = (
     + delivery_fee
 )
 
-
-# Display a structured bill summary
+# ---------------------------------------------------------
+# Bill summary
+# ---------------------------------------------------------
 st.divider()
-st.header("3. Your Order Summary")
+st.header("2. Your Bill Summary")
 
-# Display the main financial figures in separate columns
 col1, col2, col3 = st.columns(3)
 
-col1.metric(
-    "Subtotal",
-    f"₹{subtotal:,.2f}"
-)
-
+col1.metric("Subtotal", f"₹{subtotal:,.2f}")
 col2.metric(
     "Total Savings",
-    f"₹{discount_amount + membership_discount:,.2f}"
+    f"₹{discount_amount + membership_discount:,.2f}",
 )
+col3.metric("Final Amount", f"₹{final_total:,.2f}")
 
-col3.metric(
-    "Final Amount",
-    f"₹{final_total:,.2f}"
-)
-
-# Show a detailed breakdown for transparency
 with st.expander("View bill breakdown", expanded=True):
     st.write(f"**Selected medicine:** {medicine}")
     st.write(f"**Quantity:** {quantity}")
-    st.write(
-        f"**Unit price:** ₹{medicine_prices[medicine]:,.2f}"
-    )
+    st.write(f"**Unit price:** ₹{medicine_prices[medicine]:,.2f}")
 
     if add_second and second_medicine is not None:
+        st.write(f"**Second medicine:** {second_medicine}")
+        st.write(f"**Second quantity:** {second_quantity}")
         st.write(
-            f"**Second medicine:** {second_medicine}"
-        )
-        st.write(
-            f"**Second quantity:** {second_quantity}"
+            "**Second medicine unit price:** "
+            f"₹{medicine_prices[second_medicine]:,.2f}"
         )
 
     st.write(f"**Subtotal:** ₹{subtotal:,.2f}")
     st.write(f"**Discount:** −₹{discount_amount:,.2f}")
-    st.write(
-        f"**Membership benefit:** "
-        f"−₹{membership_discount:,.2f}"
-    )
+    st.write(f"**Membership benefit:** −₹{membership_discount:,.2f}")
     st.write(f"**Delivery fee:** ₹{delivery_fee:,.2f}")
 
-    st.divider()
-    st.success(f"Amount Payable: ₹{final_total:,.2f}")
-    st.markdown("""
-<div class="medi-footer">
-    <span class="medi-doodle">✿</span>
-    &nbsp; MediBill · Thoughtful design, transparent billing
-    &nbsp; <span class="medi-doodle">✳</span>
-</div>
-""", unsafe_allow_html=True)
+st.divider()
+st.success(f"Amount Payable: ₹{final_total:,.2f}")
+
+st.caption(
+    "Note: Listed medicine prices are illustrative estimates, not verified "
+    "market prices. Confirm actual prices with your pharmacy."
+)
+
+st.markdown(
+    """
+    <div class="medi-footer">
+        <span class="medi-doodle">✿</span>
+        &nbsp; MediBill · Thoughtful design, transparent billing
+        &nbsp; <span class="medi-doodle">✳</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 
