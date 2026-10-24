@@ -10,9 +10,153 @@ st.set_page_config(
     layout="centered"
 )
 
+# MediBill visual theme: sage, ivory, black and lilac
+st.markdown("""
+<style>
+    /* Main page background and typography */
+    .stApp {
+        background-color: #F7F3E8;
+        color: #222222;
+    }
+
+    /* Main content spacing */
+    .block-container {
+        max-width: 1050px;
+        padding-top: 2.2rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Headings */
+    h1, h2, h3 {
+        color: #222222 !important;
+        letter-spacing: -0.5px;
+    }
+
+    /* Main title */
+    h1 {
+        font-weight: 750 !important;
+    }
+
+    /* Paragraphs and labels */
+    p, label, .stMarkdown {
+        color: #222222;
+    }
+
+    /* Input fields */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div {
+        background-color: #FFFFFF;
+        border-color: #D9DDCD;
+        border-radius: 10px;
+    }
+
+    /* Primary buttons */
+    .stButton > button {
+        background-color: #A3B18A;
+        color: #222222;
+        border: 1px solid #8E9E75;
+        border-radius: 12px;
+        font-weight: 650;
+        transition: all 0.2s ease;
+    }
+
+    .stButton > button:hover {
+        background-color: #8E9E75;
+        color: #FFFFFF;
+        border-color: #8E9E75;
+    }
+
+    /* Metrics */
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF;
+        border: 1px solid #E3E0D6;
+        border-radius: 14px;
+        padding: 18px;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #626A55;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #222222;
+        font-weight: 700;
+    }
+
+    /* Expanders and containers */
+    div[data-testid="stExpander"] {
+        background-color: #FFFFFF;
+        border: 1px solid #E3E0D6;
+        border-radius: 12px;
+    }
+
+    /* Dividers */
+    hr {
+        border-color: #D9DDCD;
+    }
+
+    /* Success message */
+    div[data-testid="stAlert"] {
+        border-radius: 12px;
+    }
+
+    /* Checkbox accent */
+    div[data-testid="stCheckbox"] {
+        accent-color: #A3B18A;
+    }
+
+    /* Small decorative footer */
+    .medi-footer {
+        text-align: center;
+        color: #777168;
+        font-size: 13px;
+        padding-top: 24px;
+    }
+
+    .medi-doodle {
+        color: #9A83BC;
+        font-size: 18px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 # Display the website title and introduction
-st.title("💊 MediBill")
-st.subheader("Pharmacy Medicine Bill Calculator")
+
+# Branded header with a subtle decorative accent
+st.markdown("""
+<div style="
+    background: #E7EBD9;
+    border: 1px solid #D9DDCD;
+    border-radius: 18px;
+    padding: 25px;
+    margin-bottom: 22px;
+">
+    <div style="
+        color: #8E9E75;
+        font-size: 13px;
+        letter-spacing: 2px;
+        font-weight: 700;
+    ">YOUR EVERYDAY PHARMACY COMPANION</div>
+
+    <div style="
+        font-size: 38px;
+        font-weight: 800;
+        color: #222222;
+        margin-top: 5px;
+    ">♡ MediBill <span style="color:#9A83BC;">✳</span></div>
+
+    <div style="color:#626A55; font-size:15px;">
+        A little more clarity in every purchase.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.write(
+    "Create your medicine order below and "
+    "get a clear breakdown of your estimated bill."
+)
+
 st.write(
     "Calculate your estimated medicine bill quickly "
     "with a clear breakdown of your order."
@@ -165,4 +309,11 @@ with st.expander("View bill breakdown", expanded=True):
 
     st.divider()
     st.success(f"Amount Payable: ₹{final_total:,.2f}")
+    st.markdown("""
+<div class="medi-footer">
+    <span class="medi-doodle">✿</span>
+    &nbsp; MediBill · Thoughtful design, transparent billing
+    &nbsp; <span class="medi-doodle">✳</span>
+</div>
+""", unsafe_allow_html=True)
 
