@@ -11,91 +11,53 @@ st.set_page_config(
 )
 
 
-# MediBill visual theme: sage, royal blue and pink
-st.markdown("""
-<style>
-/* Main page background and typography */
-.stApp {
-    background-color: #F8F8F2;
-    color: #294634;
-}
 
-/* Keep the main content comfortable and spacious */
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-    max-width: 1050px;
-}
+# Custom MediBill header with small decorative doodles
+st.html("""
+<div style="
+    background: linear-gradient(120deg, #E2EBDD, #F5E5ED);
+    padding: 28px;
+    border-radius: 20px;
+    border: 1px solid #D5E1D0;
+    margin-bottom: 24px;
+">
+    <div style="
+        font-size: 14px;
+        color: #3655B3;
+        letter-spacing: 2px;
+        font-weight: 600;
+    ">
+        ✳ YOUR FRIENDLY PHARMACY CALCULATOR ✳
+    </div>
 
-/* Headings */
-h1, h2, h3 {
-    color: #294634 !important;
-}
+    <h1 style="
+        color: #294634;
+        font-size: 42px;
+        margin: 8px 0 4px 0;
+    ">
+        💊 MediBill
+        <span style="color: #D987A9;">♡</span>
+    </h1>
 
-/* Buttons */
-.stButton > button {
-    background-color: #3655B3;
-    color: #FFFFFF;
-    border: 1px solid #3655B3;
-    border-radius: 12px;
-    padding: 0.55rem 1rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
+    <p style="
+        color: #54745C;
+        font-size: 16px;
+        margin-bottom: 8px;
+    ">
+        Simple billing. Clear totals. A little more care.
+    </p>
 
-.stButton > button:hover {
-    background-color: #29438F;
-    border-color: #29438F;
-    color: #FFFFFF;
-}
+    <div style="
+        color: #3655B3;
+        font-size: 18px;
+        letter-spacing: 8px;
+    ">
+        ✿  +  ☆  ✿
+    </div>
+</div>
+""")
 
-/* Input fields */
-div[data-baseweb="select"] > div,
-div[data-baseweb="input"] > div {
-    background-color: #FFFFFF;
-    border-color: #D5E1D0;
-    border-radius: 10px;
-}
 
-/* Checkboxes */
-.stCheckbox label {
-    color: #355640;
-}
-
-/* Subtle dividers */
-hr {
-    border-color: #DCE8D5;
-}
-
-/* Result metric cards */
-div[data-testid="stMetric"] {
-    background-color: #E8EFE2;
-    border: 1px solid #D4E2CF;
-    padding: 16px;
-    border-radius: 14px;
-}
-
-/* Pink success and info accents */
-div[data-testid="stAlert"] {
-    border-radius: 12px;
-}
-
-/* Expander cards */
-div[data-testid="stExpander"] {
-    background-color: #FFFFFF;
-    border: 1px solid #DCE8D5;
-    border-radius: 12px;
-}
-
-/* Small footer text */
-.medi-footer {
-    color: #66806A;
-    text-align: center;
-    font-size: 0.85rem;
-    padding: 1rem 0;
-}
-</style>
-""", unsafe_allow_html=True)
 
 
 # Display the website title and introduction
