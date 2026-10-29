@@ -1,228 +1,234 @@
 import streamlit as st
 import pandas as pd
-from urllib.parse import quote
+from urllib.parse import quote_plus
 from datetime import datetime
 
-# MediBill is an academic demo. Prices, provider comparisons, bundles and delivery
-# fees below are sample data, not live offers, medical advice, or real sales analytics.
-st.set_page_config(page_title="MediBill | Pharmacy Comparison", layout="wide")
+# MediBill: educational pharmacy billing and price-comparison prototype.
+# Competitor prices and catalogue prices below are illustrative, not live quotes.
 
-NAVY, BLUE, TEAL = "#17324D", "#2F6690", "#3A7D78"
-PRODUCTS = {
-    "Paracetamol 500 mg": {"price": 30, "category": "Pain and fever relief", "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=700&q=80", "note": "Follow the product label or qualified professional's advice."},
-    "Cetirizine 10 mg": {"price": 45, "category": "Allergy relief", "image": "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&w=700&q=80", "note": "Check the label for warnings and suitability."},
-    "ORS Sachets": {"price": 25, "category": "Hydration support", "image": "https://images.unsplash.com/photo-1550572017-edd951b55104?auto=format&fit=crop&w=700&q=80", "note": "Prepare according to the package instructions."},
-    "Vitamin C Tablets": {"price": 80, "category": "Vitamin supplement", "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=700&q=80", "note": "Supplements are not a substitute for a balanced diet."},
-    "Antacid Tablets": {"price": 55, "category": "Digestive care", "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=700&q=80", "note": "Follow package directions; seek advice if symptoms persist."},
-    "Bandage Pack": {"price": 40, "category": "First aid", "image": "https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=700&q=80", "note": "For basic first-aid use."},
-    "Digital Thermometer": {"price": 150, "category": "Health monitoring", "image": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=700&q=80", "note": "Read the device instructions before use."},
-}
-# Fictional benchmark providers and illustrative prices. Replace with verified live data before claiming real comparisons.
-PROVIDER_PRICES = {
-    "Paracetamol 500 mg": {"MediBill Demo": 30, "Pharmacy A (sample)": 28, "Pharmacy B (sample)": 32, "Pharmacy C (sample)": 35},
-    "Cetirizine 10 mg": {"MediBill Demo": 45, "Pharmacy A (sample)": 42, "Pharmacy B (sample)": 48, "Pharmacy C (sample)": 44},
-    "ORS Sachets": {"MediBill Demo": 25, "Pharmacy A (sample)": 24, "Pharmacy B (sample)": 27, "Pharmacy C (sample)": 22},
-    "Vitamin C Tablets": {"MediBill Demo": 80, "Pharmacy A (sample)": 76, "Pharmacy B (sample)": 82, "Pharmacy C (sample)": 75},
-    "Antacid Tablets": {"MediBill Demo": 55, "Pharmacy A (sample)": 53, "Pharmacy B (sample)": 57, "Pharmacy C (sample)": 50},
-    "Bandage Pack": {"MediBill Demo": 40, "Pharmacy A (sample)": 38, "Pharmacy B (sample)": 42, "Pharmacy C (sample)": 36},
-    "Digital Thermometer": {"MediBill Demo": 150, "Pharmacy A (sample)": 145, "Pharmacy B (sample)": 155, "Pharmacy C (sample)": 139},
-}
-DELIVERY = {
-    "Standard delivery": {"fee": 30, "eta": "Illustrative estimate: 3–6 hours, where available"},
-    "Express delivery": {"fee": 60, "eta": "Illustrative estimate: 60–120 minutes, where available"},
-    "Pickup from pharmacy": {"fee": 0, "eta": "Collect from selected pharmacy"},
-    "Scheduled delivery": {"fee": 20, "eta": "Illustrative scheduled-delivery fee"},
-}
-BUNDLES = [
-    {"name": "Basic First-Aid Kit", "items": {"Bandage Pack": 1, "Digital Thermometer": 1}, "desc": "Basic first-aid and temperature-monitoring supplies."},
-    {"name": "Hydration Support Pair", "items": {"ORS Sachets": 2, "Digital Thermometer": 1}, "desc": "A demonstration bundle for hydration supplies and temperature monitoring."},
-    {"name": "Everyday Essentials", "items": {"Paracetamol 500 mg": 1, "Bandage Pack": 1, "ORS Sachets": 1}, "desc": "A small mix of general health and first-aid essentials."},
-]
+st.set_page_config(page_title="MediBill | Smart Pharmacy", layout="wide")
+
+NAVY, BLUE, TEAL = "#17324D", "#2563EB", "#0F766E"
+BORDER, TEXT, MUTED, BG = "#DCE4ED", "#1E293B", "#64748B", "#F8FAFC"
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-html, body, [class*="css"] {{font-family:'DM Sans',sans-serif;}}
-.stApp {{background:#F3F7FA;}}
-.block-container {{max-width:1400px;padding-top:1.5rem;padding-bottom:3rem;}}
-h1,h2,h3 {{font-family:'Manrope',sans-serif;color:{NAVY};letter-spacing:-.02em;}}
-.hero {{background:linear-gradient(115deg,{NAVY},{BLUE},{TEAL});border-radius:18px;padding:30px 34px;color:white;margin-bottom:18px;}}
-.hero h1 {{color:white;font-size:2.4rem;margin:0 0 8px 0;}}
-.hero p {{color:#E7F0F5;margin:0;max-width:800px;}}
-.eyebrow {{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#B9D7E4;font-weight:700;margin-bottom:8px;}}
-.card {{background:white;border:1px solid #DCE5EC;border-radius:15px;padding:16px;margin-bottom:12px;}}
-div[data-testid="stMetric"] {{background:white;border:1px solid #DCE5EC;border-radius:13px;padding:13px;}}
-div[data-testid="stMetricValue"] {{color:{NAVY};font-family:'Manrope',sans-serif;}}
-.stButton>button,.stDownloadButton>button {{border-radius:9px;font-weight:700;min-height:2.5rem;}}
-[data-testid="stSidebar"] {{background:white;border-right:1px solid #DCE5EC;}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+html, body, [class*="css"] {{font-family:Inter,sans-serif;color:{TEXT};}}
+.stApp {{background:{BG};}}
+[data-testid="stSidebar"] {{background:#F1F5F9;border-right:1px solid {BORDER};}}
+.hero {{padding:1.5rem 1.7rem;border-radius:18px;color:white;
+background:linear-gradient(115deg,{NAVY},#244C72 62%,{TEAL});margin-bottom:1.2rem;}}
+.hero h1 {{color:white;font-size:2.2rem;margin:0 0 .3rem 0;}}
+.hero p {{color:#E2E8F0;margin:0;}}
+.price {{font-size:1.55rem;font-weight:800;color:{NAVY};}}
+.small-muted {{color:{MUTED};font-size:.86rem;}}
+div[data-testid="stMetric"] {{background:white;border:1px solid {BORDER};padding:.8rem 1rem;border-radius:12px;}}
+div.stButton>button, div.stDownloadButton>button {{border-radius:9px;font-weight:600;min-height:2.5rem;}}
 </style>
-<div class="hero">
-<div class="eyebrow">Pharmacy shopping, made clearer</div>
-<h1>MediBill</h1>
-<p>Build a basket, estimate your bill, compare sample prices, choose delivery, and find nearby pharmacies from one clean dashboard.</p>
-</div>
+<div class="hero"><h1>MediBill</h1>
+<p>Build your order, compare sample prices, choose delivery, and watch your bill update instantly.</p></div>
 """, unsafe_allow_html=True)
 
-st.caption("Academic prototype. Prices, provider comparisons, bundle patterns, delivery fees and timings are sample data, not live marketplace offers. Confirm actual availability, prices, product details and suitability with a licensed pharmacy.")
+PRODUCTS = {
+    "Paracetamol 500 mg (10 tablets)": {"price": 30.0, "category": "Pain relief", "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=700&q=80"},
+    "Cetirizine 10 mg (10 tablets)": {"price": 45.0, "category": "Allergy care", "image": "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=700&q=80"},
+    "ORS Sachets (1 pack)": {"price": 25.0, "category": "Hydration", "image": "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=700&q=80"},
+    "Vitamin C Tablets (pack)": {"price": 80.0, "category": "Supplements", "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=700&q=80"},
+    "Antacid Tablets (pack)": {"price": 55.0, "category": "Digestive care", "image": "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&w=700&q=80"},
+    "Bandage Pack": {"price": 40.0, "category": "First aid", "image": "https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=700&q=80"},
+    "Digital Thermometer": {"price": 150.0, "category": "Health devices", "image": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=700&q=80"},
+}
+
+# Manually defined bundles stand in for recommendations from purchase history.
+BUNDLES = {
+    "Basic First-Aid Kit": {"items": {"Bandage Pack": 1, "Digital Thermometer": 1}, "discount": .05,
+                            "description": "A practical home first-aid supply bundle."},
+    "Hydration Essentials": {"items": {"ORS Sachets (1 pack)": 2, "Digital Thermometer": 1}, "discount": .05,
+                             "description": "A convenience grouping of hydration and monitoring items."},
+    "Everyday Care Bundle": {"items": {"Bandage Pack": 1, "Vitamin C Tablets (pack)": 1}, "discount": .05,
+                             "description": "A sample convenience bundle. Check product suitability separately."},
+}
+
+# Placeholder comparison prices: replace with verified same-pack-size prices before presenting as real data.
+COMPARISON = {
+    "MediBill demo": {"Paracetamol 500 mg (10 tablets)": 30, "Cetirizine 10 mg (10 tablets)": 45, "ORS Sachets (1 pack)": 25, "Vitamin C Tablets (pack)": 80, "Antacid Tablets (pack)": 55, "Bandage Pack": 40, "Digital Thermometer": 150},
+    "Tata 1mg (sample)": {"Paracetamol 500 mg (10 tablets)": 32, "Cetirizine 10 mg (10 tablets)": 42, "ORS Sachets (1 pack)": 27, "Vitamin C Tablets (pack)": 76, "Antacid Tablets (pack)": 58, "Bandage Pack": 43, "Digital Thermometer": 145},
+    "PharmEasy (sample)": {"Paracetamol 500 mg (10 tablets)": 29, "Cetirizine 10 mg (10 tablets)": 44, "ORS Sachets (1 pack)": 26, "Vitamin C Tablets (pack)": 82, "Antacid Tablets (pack)": 53, "Bandage Pack": 38, "Digital Thermometer": 155},
+    "Apollo 24|7 (sample)": {"Paracetamol 500 mg (10 tablets)": 31, "Cetirizine 10 mg (10 tablets)": 46, "ORS Sachets (1 pack)": 24, "Vitamin C Tablets (pack)": 79, "Antacid Tablets (pack)": 56, "Bandage Pack": 41, "Digital Thermometer": 148},
+}
+
+DELIVERY = {
+    "Standard delivery (2–4 hours)": 25.0,
+    "Express delivery (within 90 minutes)": 60.0,
+    "Scheduled delivery": 20.0,
+    "Store pickup": 0.0,
+}
 
 def money(value):
+    """Format an amount as Indian rupees."""
     return f"₹{value:,.2f}"
 
-def calculate_bill(items, discount_rate, delivery_fee, membership):
-    # Add each selected product's price multiplied by its quantity.
-    subtotal = sum(PRODUCTS[name]["price"] * qty for name, qty in items.items())
+def calculate_bill(cart, discount_rate, delivery_fee, membership):
+    """Calculate subtotal, percentage discount, membership benefit, delivery and total."""
+    subtotal = sum(PRODUCTS[name]["price"] * qty for name, qty in cart.items())
     discount = subtotal * discount_rate
     after_discount = subtotal - discount
-    # Membership benefit cannot exceed the amount remaining after discount.
-    member_benefit = min(10, after_discount) if membership else 0
-    total = max(0, after_discount - member_benefit + delivery_fee)
-    return {"subtotal": subtotal, "discount": discount, "membership": member_benefit, "delivery": delivery_fee, "total": total}
+    member_benefit = min(10.0, after_discount) if membership else 0.0
+    total = max(0.0, after_discount - member_benefit + delivery_fee)
+    return {"subtotal": subtotal, "discount": discount, "membership": member_benefit,
+            "delivery": delivery_fee, "total": total}
 
-def map_url(provider, query):
-    if provider == "Google Maps":
-        return "https://www.google.com/maps/search/" + quote(query)
-    return "https://www.openstreetmap.org/search?query=" + quote(query)
+def maps_url(location):
+    """Build a Google Maps search link; this does not access device GPS."""
+    search = f"pharmacies near {location}" if location.strip() else "pharmacies near me"
+    return "https://www.google.com/maps/search/?api=1&query=" + quote_plus(search)
 
-# Persistent sidebar inputs.
+def add_bundle(items):
+    """Add bundle items to current quantities without exceeding 100 per product."""
+    for product, amount in items.items():
+        key = "qty_" + product
+        st.session_state[key] = min(100, int(st.session_state.get(key, 0)) + amount)
+
+for product in PRODUCTS:
+    if "qty_" + product not in st.session_state:
+        st.session_state["qty_" + product] = 0
+
 with st.sidebar:
-    st.markdown("## Build your basket")
-    basket = {}
-    for i, name in enumerate(PRODUCTS, start=1):
-        if st.checkbox(name, key=f"item_{i}"):
-            basket[name] = int(st.number_input(f"Quantity: {name}", 1, 100, 1, key=f"qty_{i}"))
-    discount_name = st.selectbox("Discount", ["No discount", "5% discount", "10% discount"])
-    discount_rate = {"No discount": 0, "5% discount": .05, "10% discount": .10}[discount_name]
-    membership = st.checkbox("Membership benefit (₹10)")
-    delivery_name = st.selectbox("Delivery method", list(DELIVERY))
-    delivery_fee = DELIVERY[delivery_name]["fee"]
-    st.caption(DELIVERY[delivery_name]["eta"])
-    st.caption("Product prices are illustrative demo values.")
+    st.markdown("### Order settings")
+    discount_choice = st.selectbox("Discount", ["No discount", "5% off", "10% off"])
+    discount_rate = {"No discount": 0.0, "5% off": .05, "10% off": .10}[discount_choice]
+    membership = st.checkbox("Apply membership benefit (₹10 off)")
+    delivery_method = st.selectbox("Delivery method", list(DELIVERY.keys()))
+    delivery_fee = DELIVERY[delivery_method]
+    st.caption(f"Sample delivery fee: {money(delivery_fee)}")
+    st.markdown("---")
+    location = st.text_input("Area or PIN code", placeholder="e.g., Sonipat or 131001")
+    st.link_button("Find nearby pharmacies", maps_url(location), use_container_width=True)
+    st.caption("Opens Google Maps. Pharmacy results and opening hours are not provided by MediBill.")
 
-bill = calculate_bill(basket, discount_rate, delivery_fee, membership)
-tabs = st.tabs(["Bill builder", "Price comparison", "Nearby pharmacies", "Bundles", "Project details"])
+shop_tab, bundles_tab, compare_tab, pharmacy_tab = st.tabs(
+    ["Shop & live receipt", "Bundles", "Price comparison", "Nearby pharmacies"]
+)
 
-with tabs[0]:
-    st.subheader("Your basket")
-    if not basket:
-        st.info("Select products and quantities in the left panel to build your basket.")
-    else:
-        col1, col2 = st.columns([1.5, 1], gap="large")
-        with col1:
-            rows = []
-            for name, qty in basket.items():
-                p = PRODUCTS[name]
-                image_col, details_col, price_col = st.columns([.8, 2.2, 1])
-                with image_col:
-                    st.image(p["image"], width=85)
-                with details_col:
-                    st.markdown(f"**{name}**")
-                    st.caption(p["category"])
-                    st.caption(p["note"])
-                with price_col:
-                    st.markdown(f"**{money(p['price'] * qty)}**")
-                    st.caption(f"{qty} × {money(p['price'])}")
-                rows.append({"Product": name, "Quantity": qty, "Unit price (₹)": p["price"], "Line total (₹)": p["price"] * qty})
-                st.divider()
-            receipt = pd.DataFrame(rows)
-            st.markdown("#### Itemized receipt")
-            st.dataframe(receipt, use_container_width=True, hide_index=True)
-            st.download_button("Download receipt CSV", receipt.to_csv(index=False).encode("utf-8"),
-                file_name=f"medibill_receipt_{datetime.now().strftime('%Y%m%d_%H%M')}.csv", mime="text/csv")
-        with col2:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown("### Bill summary")
-            st.metric("Subtotal", money(bill["subtotal"]))
-            st.metric("Discount", "− " + money(bill["discount"]))
-            st.metric("Membership benefit", "− " + money(bill["membership"]))
-            st.metric("Delivery fee", money(bill["delivery"]))
-            st.markdown("---")
-            st.markdown("#### Estimated total")
-            st.markdown(f"<h1 style='color:{NAVY};'>{money(bill['total'])}</h1>", unsafe_allow_html=True)
-            st.caption(f"Selected delivery: {delivery_name}")
-            st.markdown("</div>", unsafe_allow_html=True)
-            st.success("Estimate calculated. Confirm the final payable amount with the provider.")
+with shop_tab:
+    st.subheader("Choose products")
+    st.write("Change quantities. The receipt on the right updates automatically.")
+    products_col, receipt_col = st.columns([1.5, 1], gap="large")
+    with products_col:
+        names = list(PRODUCTS.keys())
+        for i in range(0, len(names), 2):
+            row_cols = st.columns(2, gap="medium")
+            for j, name in enumerate(names[i:i+2]):
+                item = PRODUCTS[name]
+                with row_cols[j]:
+                    with st.container(border=True):
+                        try:
+                            st.image(item["image"], use_container_width=True)
+                        except Exception:
+                            st.caption("Product image unavailable")
+                        st.markdown(f"**{name}**")
+                        st.caption(item["category"])
+                        st.markdown(f"<div class='price'>{money(item['price'])}</div>", unsafe_allow_html=True)
+                        st.number_input("Quantity", min_value=0, max_value=100, step=1,
+                                        key="qty_" + name, help="Set quantity to 0 to remove.")
+    with receipt_col:
+        cart = {name: int(st.session_state["qty_" + name]) for name in PRODUCTS
+                if int(st.session_state["qty_" + name]) > 0}
+        bill = calculate_bill(cart, discount_rate, delivery_fee, membership)
+        st.markdown("### Live receipt")
+        st.caption("Always visible while you build your order.")
+        if cart:
+            rows = [{"Item": name, "Qty": qty, "Unit price": money(PRODUCTS[name]["price"]),
+                     "Amount": money(PRODUCTS[name]["price"] * qty)} for name, qty in cart.items()]
+            st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        else:
+            st.info("Your cart is empty. Add a product to begin.")
+        st.markdown("---")
+        st.metric("Subtotal", money(bill["subtotal"]))
+        st.write(f"Discount ({discount_choice}): **−{money(bill['discount'])}**")
+        st.write(f"Membership benefit: **−{money(bill['membership'])}**")
+        st.write(f"Delivery ({delivery_method}): **{money(bill['delivery'])}**")
+        st.markdown(f"<div style='background:white;border:1px solid {BORDER};padding:1rem;border-radius:12px;'>"
+                    f"<div style='color:{MUTED};font-size:.85rem;'>TOTAL TO PAY</div>"
+                    f"<div class='price'>{money(bill['total'])}</div></div>", unsafe_allow_html=True)
+        if cart:
+            export_rows = rows + [
+                {"Item": "Subtotal", "Qty": "", "Unit price": "", "Amount": money(bill["subtotal"])},
+                {"Item": "Discount", "Qty": "", "Unit price": "", "Amount": money(-bill["discount"])},
+                {"Item": "Membership benefit", "Qty": "", "Unit price": "", "Amount": money(-bill["membership"])},
+                {"Item": "Delivery: " + delivery_method, "Qty": "", "Unit price": "", "Amount": money(bill["delivery"])},
+                {"Item": "TOTAL", "Qty": "", "Unit price": "", "Amount": money(bill["total"])},
+            ]
+            st.download_button("Download receipt (CSV)", pd.DataFrame(export_rows).to_csv(index=False).encode("utf-8"),
+                               file_name=f"medibill_receipt_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                               mime="text/csv", use_container_width=True)
+        if st.button("Clear entire cart", use_container_width=True):
+            for name in PRODUCTS:
+                st.session_state["qty_" + name] = 0
+            st.rerun()
 
-    st.markdown("#### Product catalogue")
+with bundles_tab:
+    st.subheader("Frequently bought together: sample bundles")
+    st.write("These are manually configured demo bundles, not recommendations derived from actual purchase history.")
     cols = st.columns(3)
-    for i, (name, p) in enumerate(PRODUCTS.items()):
-        with cols[i % 3]:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.image(p["image"], use_container_width=True)
-            st.markdown(f"**{name}**")
-            st.caption(p["category"])
-            st.markdown(f"### {money(p['price'])}")
-            st.caption(p["note"])
-            st.markdown("</div>", unsafe_allow_html=True)
+    for i, (bundle_name, bundle) in enumerate(BUNDLES.items()):
+        with cols[i]:
+            with st.container(border=True):
+                st.markdown(f"#### {bundle_name}")
+                st.write(bundle["description"])
+                base = sum(PRODUCTS[p]["price"] * qty for p, qty in bundle["items"].items())
+                st.markdown(f"**Bundle price: {money(base * (1-bundle['discount']))}**")
+                st.caption("Includes a 5% illustrative bundle discount.")
+                for product, qty in bundle["items"].items():
+                    st.write(f"- {product} × {qty}")
+                if st.button("Add bundle to cart", key="bundle_" + bundle_name, use_container_width=True):
+                    add_bundle(bundle["items"])
+                    st.success("Bundle items added. Open Shop & live receipt to review.")
+    st.info("A production version could calculate frequent item pairs from anonymised order history. This demo has no transaction database.")
 
-with tabs[1]:
-    st.subheader("Compare estimated product prices")
-    st.write("Choose a product to compare its demo price with fictional provider benchmarks.")
-    product = st.selectbox("Product", list(PROVIDER_PRICES))
-    comparison = pd.DataFrame([{"Provider": k, "Sample unit price (₹)": v} for k, v in PROVIDER_PRICES[product].items()])
-    comparison = comparison.sort_values("Sample unit price (₹)").reset_index(drop=True)
-    comparison["Difference vs MediBill Demo (₹)"] = comparison["Sample unit price (₹)"] - PROVIDER_PRICES[product]["MediBill Demo"]
-    lowest = comparison.iloc[0]
-    a, b, c = st.columns(3)
-    a.metric("Lowest sample price", money(float(lowest["Sample unit price (₹)"])))
-    b.metric("Lowest sample provider", str(lowest["Provider"]))
-    c.metric("MediBill demo price", money(PROVIDER_PRICES[product]["MediBill Demo"]))
-    st.dataframe(comparison, use_container_width=True, hide_index=True)
-    st.bar_chart(comparison.set_index("Provider")[["Sample unit price (₹)"]])
-    st.warning("Provider labels and prices are fictional. They are not verified prices from Tata 1mg, PharmEasy, Apollo, Netmeds or local pharmacies.")
-    st.markdown("**To make this a real comparison:** use the same brand, strength and pack size; record source URLs and date/time checked; include delivery fees and coupon conditions; compare final payable totals.")
+with compare_tab:
+    st.subheader("Compare estimated basket costs")
+    st.warning("All competitor figures below are placeholders for demonstrating the comparison feature. They are not live or verified prices.")
+    selected = st.multiselect("Select products", list(PRODUCTS.keys()),
+                               default=["Paracetamol 500 mg (10 tablets)", "ORS Sachets (1 pack)"])
+    if selected:
+        comparison_rows = []
+        for product in selected:
+            row = {"Product": product}
+            for provider, prices in COMPARISON.items():
+                row[provider] = prices[product]
+            row["Lowest sample price"] = min(prices[product] for prices in COMPARISON.values())
+            comparison_rows.append(row)
+        comparison_df = pd.DataFrame(comparison_rows)
+        st.dataframe(comparison_df.style.format({c: "₹{:.2f}" for c in comparison_df.columns if c != "Product"}),
+                     hide_index=True, use_container_width=True)
+        totals = {provider: sum(prices[p] for p in selected) for provider, prices in COMPARISON.items()}
+        st.markdown("#### Total for selected sample basket")
+        cols = st.columns(len(totals))
+        for i, (provider, total) in enumerate(totals.items()):
+            with cols[i]:
+                st.metric(provider, money(total))
+        cheapest = min(totals, key=totals.get)
+        st.success(f"Lowest sample basket: {cheapest} at {money(totals[cheapest])}. Placeholder prices only; delivery and live offers are excluded.")
+    st.caption("For a fair comparison, verify the exact brand, strength, pack size, seller, stock, discounts, delivery fee, and date.")
+    links = [("Tata 1mg", "https://www.1mg.com/"), ("PharmEasy", "https://pharmeasy.in/"),
+             ("Apollo 24|7", "https://www.apollo247.com/")]
+    link_cols = st.columns(3)
+    for i, (label, url) in enumerate(links):
+        with link_cols[i]:
+            st.link_button("Open " + label, url, use_container_width=True)
 
-with tabs[2]:
-    st.subheader("Find nearby pharmacies")
-    st.write("Enter a locality, landmark, PIN code or city. MediBill opens a map search rather than claiming to have live GPS or pharmacy inventory.")
-    location = st.text_input("Your area or PIN code", placeholder="For example: Sector 14, Sonipat or 131001")
-    search_type = st.selectbox("Search for", ["Pharmacies", "24-hour pharmacies", "Pharmacies with delivery", "Medical stores"])
-    if location.strip():
-        query = f"{search_type} near {location.strip()}"
-        c1, c2 = st.columns(2)
-        with c1:
-            st.link_button("Open Google Maps results", map_url("Google Maps", query), use_container_width=True)
-        with c2:
-            st.link_button("Open OpenStreetMap results", map_url("OpenStreetMap", query), use_container_width=True)
-        st.info("Map information can be incomplete. Call the pharmacy to confirm hours, stock, prescription requirements, delivery area and final price.")
-    else:
-        st.info("Enter your area or PIN code to create map links.")
-    st.markdown("#### Delivery methods")
-    st.dataframe(pd.DataFrame([{"Method": k, "Illustrative fee (₹)": v["fee"], "Timing / notes": v["eta"]} for k, v in DELIVERY.items()]), use_container_width=True, hide_index=True)
-
-with tabs[3]:
-    st.subheader("Frequently bought together and package ideas")
-    st.write("These are rule-based demo bundles, not recommendations based on real customer purchase history. They are not medical recommendations.")
-    for bundle in BUNDLES:
-        with st.container(border=True):
-            left, right = st.columns([2, 1])
-            subtotal = sum(PRODUCTS[n]["price"] * q for n, q in bundle["items"].items())
-            discounted = subtotal * .95
-            with left:
-                st.markdown(f"### {bundle['name']}")
-                st.write(bundle["desc"])
-                for n, q in bundle["items"].items():
-                    st.write(f"- {n} × {q} · {money(PRODUCTS[n]['price'] * q)}")
-                st.caption("The 5% bundle discount is hypothetical.")
-            with right:
-                st.metric("Regular total", money(subtotal))
-                st.metric("Sample bundle price", money(discounted))
-                st.caption(f"Sample saving: {money(subtotal - discounted)}")
-                if st.button("Add bundle to basket", key="bundle_" + bundle["name"]):
-                    for n, q in bundle["items"].items():
-                        index = list(PRODUCTS).index(n) + 1
-                        st.session_state[f"item_{index}"] = True
-                        st.session_state[f"qty_{index}"] = q
-                    st.rerun()
-
-with tabs[4]:
-    st.subheader("About MediBill")
-    st.write("MediBill is an academic Python and Streamlit prototype for estimating a pharmacy basket total. It demonstrates dictionaries, lists, functions, loops, conditionals, arithmetic, tables and CSV export.")
-    st.markdown("#### Interface improvements")
-    st.markdown("- Professional navy, blue and teal colour palette.\n- Product images and clearer catalogue cards.\n- Persistent basket controls and itemized receipt.\n- Separate price comparison, pharmacy search and bundle sections.\n- Delivery choices for standard, express, pickup and scheduled orders.")
-    st.markdown("#### Limitations")
-    st.markdown("- Prices, provider benchmarks, delivery fees and bundle patterns are sample data.\n- Pharmacy searches use external map results and do not guarantee stock or opening hours.\n- No payment processing, user accounts, inventory database, order history, or medical advice.")
-    st.markdown("#### Suggested next improvements")
-    st.markdown("- Replace sample comparison values with verified prices and source links.\n- Add automated tests for discounts, membership limits, delivery and empty baskets.\n- Capture screenshots of the running app for the project report.\n- Keep the main application in one `app.py` file to match the assignment instructions.")
+with pharmacy_tab:
+    st.subheader("Nearby pharmacies")
+    pharmacy_location = st.text_input("Area or PIN code for pharmacy search", value=location,
+                                       placeholder="Enter area or PIN code", key="pharmacy_location")
+    st.write("Search nearby pharmacies through Google Maps. MediBill does not access your GPS or verify pharmacy stock.")
+    st.link_button("Search Google Maps for pharmacies", maps_url(pharmacy_location), use_container_width=True)
+    st.markdown("#### Online pharmacy websites")
+    st.markdown("- [Tata 1mg](https://www.1mg.com/)")
+    st.markdown("- [PharmEasy](https://pharmeasy.in/)")
+    st.markdown("- [Apollo 24|7](https://www.apollo247.com/)")
 
 st.markdown("---")
-st.caption("MediBill · Academic prototype · Confirm all prices, availability and product information with a pharmacy before purchase.")
+st.caption("MediBill is an academic prototype. Catalogue prices, competitor estimates, discounts, bundles, and delivery fees are illustrative. Confirm product details, current prices, stock, and delivery directly with the provider. This application does not provide medical advice.")
