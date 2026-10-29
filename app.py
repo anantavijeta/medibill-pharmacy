@@ -94,7 +94,7 @@ st.markdown(
 )
 
 # Educational catalogue with 56 products across multiple manufacturers.
-    product_col, receipt_col = st.columns([1.4,1], gap="large")
+product_col, receipt_col = st.columns([1.4,1], gap="large")
     with product_col:
         st.subheader("Product catalogue")
         search = st.text_input("Search by brand, ingredient or company", placeholder="e.g., Dolo, Cipla, vitamin")
