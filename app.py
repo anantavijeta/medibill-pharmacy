@@ -1,440 +1,228 @@
 import streamlit as st
 import pandas as pd
-from io import StringIO
+from urllib.parse import quote
+from datetime import datetime
 
-# ============================================================
-# 1. PAGE CONFIGURATION
-# ============================================================
-st.set_page_config(
-    page_title="MediBill | Pharmacy Studio",
-    page_icon="💊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# MediBill is an academic demo. Prices, provider comparisons, bundles and delivery
+# fees below are sample data, not live offers, medical advice, or real sales analytics.
+st.set_page_config(page_title="MediBill | Pharmacy Comparison", layout="wide")
 
-# ============================================================
-# 2. COLOUR PALETTE
-# ============================================================
-PINK = "#F5A6C8"
-LIGHT_PINK = "#FFF0F6"
-ROYAL_BLUE = "#4169E1"
-SAGE_GREEN = "#A8BFA3"
-PEACOCK_GREEN = "#064E45"
-DARK_GREEN = "#123D35"
-CREAM = "#FFFAFC"
-TEXT = "#263B37"
+NAVY, BLUE, TEAL = "#17324D", "#2F6690", "#3A7D78"
+PRODUCTS = {
+    "Paracetamol 500 mg": {"price": 30, "category": "Pain and fever relief", "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=700&q=80", "note": "Follow the product label or qualified professional's advice."},
+    "Cetirizine 10 mg": {"price": 45, "category": "Allergy relief", "image": "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&w=700&q=80", "note": "Check the label for warnings and suitability."},
+    "ORS Sachets": {"price": 25, "category": "Hydration support", "image": "https://images.unsplash.com/photo-1550572017-edd951b55104?auto=format&fit=crop&w=700&q=80", "note": "Prepare according to the package instructions."},
+    "Vitamin C Tablets": {"price": 80, "category": "Vitamin supplement", "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=700&q=80", "note": "Supplements are not a substitute for a balanced diet."},
+    "Antacid Tablets": {"price": 55, "category": "Digestive care", "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=700&q=80", "note": "Follow package directions; seek advice if symptoms persist."},
+    "Bandage Pack": {"price": 40, "category": "First aid", "image": "https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=700&q=80", "note": "For basic first-aid use."},
+    "Digital Thermometer": {"price": 150, "category": "Health monitoring", "image": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=700&q=80", "note": "Read the device instructions before use."},
+}
+# Fictional benchmark providers and illustrative prices. Replace with verified live data before claiming real comparisons.
+PROVIDER_PRICES = {
+    "Paracetamol 500 mg": {"MediBill Demo": 30, "Pharmacy A (sample)": 28, "Pharmacy B (sample)": 32, "Pharmacy C (sample)": 35},
+    "Cetirizine 10 mg": {"MediBill Demo": 45, "Pharmacy A (sample)": 42, "Pharmacy B (sample)": 48, "Pharmacy C (sample)": 44},
+    "ORS Sachets": {"MediBill Demo": 25, "Pharmacy A (sample)": 24, "Pharmacy B (sample)": 27, "Pharmacy C (sample)": 22},
+    "Vitamin C Tablets": {"MediBill Demo": 80, "Pharmacy A (sample)": 76, "Pharmacy B (sample)": 82, "Pharmacy C (sample)": 75},
+    "Antacid Tablets": {"MediBill Demo": 55, "Pharmacy A (sample)": 53, "Pharmacy B (sample)": 57, "Pharmacy C (sample)": 50},
+    "Bandage Pack": {"MediBill Demo": 40, "Pharmacy A (sample)": 38, "Pharmacy B (sample)": 42, "Pharmacy C (sample)": 36},
+    "Digital Thermometer": {"MediBill Demo": 150, "Pharmacy A (sample)": 145, "Pharmacy B (sample)": 155, "Pharmacy C (sample)": 139},
+}
+DELIVERY = {
+    "Standard delivery": {"fee": 30, "eta": "Illustrative estimate: 3–6 hours, where available"},
+    "Express delivery": {"fee": 60, "eta": "Illustrative estimate: 60–120 minutes, where available"},
+    "Pickup from pharmacy": {"fee": 0, "eta": "Collect from selected pharmacy"},
+    "Scheduled delivery": {"fee": 20, "eta": "Illustrative scheduled-delivery fee"},
+}
+BUNDLES = [
+    {"name": "Basic First-Aid Kit", "items": {"Bandage Pack": 1, "Digital Thermometer": 1}, "desc": "Basic first-aid and temperature-monitoring supplies."},
+    {"name": "Hydration Support Pair", "items": {"ORS Sachets": 2, "Digital Thermometer": 1}, "desc": "A demonstration bundle for hydration supplies and temperature monitoring."},
+    {"name": "Everyday Essentials", "items": {"Paracetamol 500 mg": 1, "Bandage Pack": 1, "ORS Sachets": 1}, "desc": "A small mix of general health and first-aid essentials."},
+]
 
-# ============================================================
-# 3. WEBSITE DESIGN
-# ============================================================
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
-
-.stApp {{
-    background:
-        radial-gradient(ellipse at 4% 12%, rgba(245,166,200,0.16), transparent 27%),
-        radial-gradient(ellipse at 94% 35%, rgba(168,191,163,0.19), transparent 28%),
-        {CREAM};
-    color: {TEXT};
-    font-family: 'DM Sans', sans-serif;
-}}
-.block-container {{
-    padding-top: 1.7rem;
-    padding-bottom: 2.5rem;
-    max-width: 1400px;
-}}
-h1, h2, h3 {{
-    color: {PEACOCK_GREEN} !important;
-    font-family: 'Playfair Display', Georgia, serif !important;
-}}
-[data-testid="stSidebar"] {{
-    background: linear-gradient(180deg, #FCE5EF 0%, #F4EAFB 48%, #E6F0E5 100%);
-    border-right: 1px solid #E6C8D8;
-}}
-[data-testid="stMetric"] {{
-    background: white;
-    border: 1px solid #E5DCE5;
-    border-radius: 16px;
-    padding: 17px;
-    box-shadow: 0 5px 18px rgba(6,78,69,0.05);
-}}
-[data-testid="stMetricLabel"] {{ color: {PEACOCK_GREEN} !important; }}
-[data-testid="stMetricValue"] {{ color: {ROYAL_BLUE} !important; font-weight: 700; }}
-.stButton > button, .stDownloadButton > button {{
-    background: {PEACOCK_GREEN};
-    color: white;
-    border: 1px solid {PEACOCK_GREEN};
-    border-radius: 12px;
-    font-weight: 600;
-    min-height: 43px;
-}}
-.stButton > button:hover, .stDownloadButton > button:hover {{
-    background: {ROYAL_BLUE};
-    border-color: {ROYAL_BLUE};
-    color: white;
-}}
-.medi-hero {{
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(120deg, #064E45 0%, #12695B 56%, #4169E1 120%);
-    border-radius: 25px;
-    padding: 32px 34px;
-    margin-bottom: 22px;
-    color: white;
-    box-shadow: 0 12px 32px rgba(6,78,69,0.15);
-}}
-.medi-hero h1 {{
-    color: white !important;
-    font-size: 43px !important;
-    margin: 0;
-}}
-.medi-hero p {{ color: #F7EAF3; margin: 7px 0 0 0; font-size: 14px; }}
-.hero-label {{ color: {PINK}; font-size: 10px; letter-spacing: 3px; font-weight: 700; }}
-.doodle-cloud {{
-    position: absolute; right: 24px; top: 12px; width: 215px; height: 135px;
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-    gap: 10px; transform: rotate(-5deg); opacity: 0.96;
-}}
-.doodle {{
-    display: inline-flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.35);
-    border-radius: 17px; width: 51px; height: 51px; font-size: 25px;
-    transform: rotate(7deg);
-}}
-.doodle:nth-child(even) {{ transform: rotate(-12deg); background: rgba(245,166,200,0.22); }}
-.section-label {{
-    background: linear-gradient(90deg, #FCE4EF, #E8EAFE);
-    color: #064E45; border-left: 4px solid #4169E1; border-radius: 8px;
-    padding: 10px 14px; font-weight: 700; margin: 12px 0 16px 0;
-}}
-.mini-label {{ color: #52756A; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; }}
-.total-banner {{
-    background: linear-gradient(115deg, #064E45, #12695B);
-    color: white; padding: 23px; border-radius: 19px; margin: 12px 0;
-}}
-.total-banner .amount {{ color: #F5A6C8; font-size: 35px; font-weight: 700; }}
-.total-banner .caption {{ color: #E3F0E8; font-size: 12px; }}
-.medi-footer {{
-    background: #F8EAF1; border: 1px solid #EBD7E2; border-radius: 15px;
-    padding: 16px; color: #52685F; text-align: center; font-size: 12px;
-}}
-@media (max-width: 700px) {{
-    .medi-hero {{ padding: 23px 20px; }}
-    .medi-hero h1 {{ font-size: 34px !important; }}
-    .doodle-cloud {{ opacity: 0.3; right: -40px; }}
-}}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+html, body, [class*="css"] {{font-family:'DM Sans',sans-serif;}}
+.stApp {{background:#F3F7FA;}}
+.block-container {{max-width:1400px;padding-top:1.5rem;padding-bottom:3rem;}}
+h1,h2,h3 {{font-family:'Manrope',sans-serif;color:{NAVY};letter-spacing:-.02em;}}
+.hero {{background:linear-gradient(115deg,{NAVY},{BLUE},{TEAL});border-radius:18px;padding:30px 34px;color:white;margin-bottom:18px;}}
+.hero h1 {{color:white;font-size:2.4rem;margin:0 0 8px 0;}}
+.hero p {{color:#E7F0F5;margin:0;max-width:800px;}}
+.eyebrow {{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#B9D7E4;font-weight:700;margin-bottom:8px;}}
+.card {{background:white;border:1px solid #DCE5EC;border-radius:15px;padding:16px;margin-bottom:12px;}}
+div[data-testid="stMetric"] {{background:white;border:1px solid #DCE5EC;border-radius:13px;padding:13px;}}
+div[data-testid="stMetricValue"] {{color:{NAVY};font-family:'Manrope',sans-serif;}}
+.stButton>button,.stDownloadButton>button {{border-radius:9px;font-weight:700;min-height:2.5rem;}}
+[data-testid="stSidebar"] {{background:white;border-right:1px solid #DCE5EC;}}
 </style>
-""", unsafe_allow_html=True)
-
-# ============================================================
-# 4. HEADER
-# ============================================================
-st.markdown("""
-<div class="medi-hero">
-    <div class="hero-label">YOUR FRIENDLY PHARMACY COMPANION</div>
-    <h1>♡ MediBill</h1>
-    <p>Thoughtful healthcare. Transparent billing. One little app.</p>
-    <div class="doodle-cloud">
-        <span class="doodle">💊</span>
-        <span class="doodle">🩹</span>
-        <span class="doodle">🧴</span>
-        <span class="doodle">🩺</span>
-        <span class="doodle">🌿</span>
-        <span class="doodle">🩷</span>
-    </div>
+<div class="hero">
+<div class="eyebrow">Pharmacy shopping, made clearer</div>
+<h1>MediBill</h1>
+<p>Build a basket, estimate your bill, compare sample prices, choose delivery, and find nearby pharmacies from one clean dashboard.</p>
 </div>
 """, unsafe_allow_html=True)
 
-st.write("Create an illustrative pharmacy bill by selecting products, quantities and optional services.")
+st.caption("Academic prototype. Prices, provider comparisons, bundle patterns, delivery fees and timings are sample data, not live marketplace offers. Confirm actual availability, prices, product details and suitability with a licensed pharmacy.")
 
-# ============================================================
-# 5. DICTIONARY: MEDICINE CATALOGUE
-# Prices are examples, not verified retail prices.
-# ============================================================
-medicine_catalogue = {
-    "Paracetamol 500 mg": 30.00,
-    "Cetirizine 10 mg": 45.00,
-    "ORS Sachets": 25.00,
-    "Vitamin C Tablets": 80.00,
-    "Antacid Tablets": 55.00,
-    "Bandage Pack": 40.00,
-    "Digital Thermometer": 150.00
-}
+def money(value):
+    return f"₹{value:,.2f}"
 
-# ============================================================
-# 6. FUNCTION: CALCULATE THE BILL
-# Uses a loop, dictionary, int, float, if/elif/else and return.
-# ============================================================
-def calculate_bill(items, discount_rate, delivery, membership):
-    # Float: initialise the subtotal as a decimal number.
-    subtotal = 0.0
+def calculate_bill(items, discount_rate, delivery_fee, membership):
+    # Add each selected product's price multiplied by its quantity.
+    subtotal = sum(PRODUCTS[name]["price"] * qty for name, qty in items.items())
+    discount = subtotal * discount_rate
+    after_discount = subtotal - discount
+    # Membership benefit cannot exceed the amount remaining after discount.
+    member_benefit = min(10, after_discount) if membership else 0
+    total = max(0, after_discount - member_benefit + delivery_fee)
+    return {"subtotal": subtotal, "discount": discount, "membership": member_benefit, "delivery": delivery_fee, "total": total}
 
-    # Loop through each selected item and add its line total.
-    for item in items:
-        price = float(item["Unit Price (₹)"])
-        quantity = int(item["Quantity"])
-        item_total = price * quantity
-        subtotal = subtotal + item_total
+def map_url(provider, query):
+    if provider == "Google Maps":
+        return "https://www.google.com/maps/search/" + quote(query)
+    return "https://www.openstreetmap.org/search?query=" + quote(query)
 
-    # If/elif/else: apply the selected percentage discount.
-    if discount_rate == 0.10:
-        discount = subtotal * 0.10
-    elif discount_rate == 0.05:
-        discount = subtotal * 0.05
-    else:
-        discount = 0.0
-
-    # If/else: apply the membership benefit when selected.
-    if membership:
-        membership_benefit = 10.0
-    else:
-        membership_benefit = 0.0
-
-    # Keep total discounts from exceeding the subtotal.
-    remaining_amount = subtotal - discount
-    if membership_benefit > remaining_amount:
-        membership_benefit = remaining_amount
-
-    # If/else: delivery costs ₹30 only when selected.
-    if delivery:
-        delivery_fee = 30.0
-    else:
-        delivery_fee = 0.0
-
-    # Arithmetic: calculate the final amount payable.
-    total = subtotal - discount - membership_benefit + delivery_fee
-
-    # Dictionary: return all calculated amounts together.
-    bill = {
-        "subtotal": subtotal,
-        "discount": discount,
-        "membership_benefit": membership_benefit,
-        "delivery_fee": delivery_fee,
-        "total": max(0.0, total)
-    }
-    return bill
-
-# ============================================================
-# 7. SIDEBAR BILLING SETTINGS
-# ============================================================
+# Persistent sidebar inputs.
 with st.sidebar:
-    st.markdown("## 🌸 Billing Studio")
-    st.caption("Personalize your sample order")
-    st.markdown("---")
+    st.markdown("## Build your basket")
+    basket = {}
+    for i, name in enumerate(PRODUCTS, start=1):
+        if st.checkbox(name, key=f"item_{i}"):
+            basket[name] = int(st.number_input(f"Quantity: {name}", 1, 100, 1, key=f"qty_{i}"))
+    discount_name = st.selectbox("Discount", ["No discount", "5% discount", "10% discount"])
+    discount_rate = {"No discount": 0, "5% discount": .05, "10% discount": .10}[discount_name]
+    membership = st.checkbox("Membership benefit (₹10)")
+    delivery_name = st.selectbox("Delivery method", list(DELIVERY))
+    delivery_fee = DELIVERY[delivery_name]["fee"]
+    st.caption(DELIVERY[delivery_name]["eta"])
+    st.caption("Product prices are illustrative demo values.")
 
-    # String: discount_choice stores the selected text.
-    discount_choice = st.selectbox(
-        "🎀 Discount tier",
-        ["No Discount", "5% Discount", "10% Discount"]
-    )
+bill = calculate_bill(basket, discount_rate, delivery_fee, membership)
+tabs = st.tabs(["Bill builder", "Price comparison", "Nearby pharmacies", "Bundles", "Project details"])
 
-    # If/elif/else: convert the selected string into a rate.
-    if discount_choice == "5% Discount":
-        discount_rate = 0.05
-    elif discount_choice == "10% Discount":
-        discount_rate = 0.10
+with tabs[0]:
+    st.subheader("Your basket")
+    if not basket:
+        st.info("Select products and quantities in the left panel to build your basket.")
     else:
-        discount_rate = 0.0
+        col1, col2 = st.columns([1.5, 1], gap="large")
+        with col1:
+            rows = []
+            for name, qty in basket.items():
+                p = PRODUCTS[name]
+                image_col, details_col, price_col = st.columns([.8, 2.2, 1])
+                with image_col:
+                    st.image(p["image"], width=85)
+                with details_col:
+                    st.markdown(f"**{name}**")
+                    st.caption(p["category"])
+                    st.caption(p["note"])
+                with price_col:
+                    st.markdown(f"**{money(p['price'] * qty)}**")
+                    st.caption(f"{qty} × {money(p['price'])}")
+                rows.append({"Product": name, "Quantity": qty, "Unit price (₹)": p["price"], "Line total (₹)": p["price"] * qty})
+                st.divider()
+            receipt = pd.DataFrame(rows)
+            st.markdown("#### Itemized receipt")
+            st.dataframe(receipt, use_container_width=True, hide_index=True)
+            st.download_button("Download receipt CSV", receipt.to_csv(index=False).encode("utf-8"),
+                file_name=f"medibill_receipt_{datetime.now().strftime('%Y%m%d_%H%M')}.csv", mime="text/csv")
+        with col2:
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.markdown("### Bill summary")
+            st.metric("Subtotal", money(bill["subtotal"]))
+            st.metric("Discount", "− " + money(bill["discount"]))
+            st.metric("Membership benefit", "− " + money(bill["membership"]))
+            st.metric("Delivery fee", money(bill["delivery"]))
+            st.markdown("---")
+            st.markdown("#### Estimated total")
+            st.markdown(f"<h1 style='color:{NAVY};'>{money(bill['total'])}</h1>", unsafe_allow_html=True)
+            st.caption(f"Selected delivery: {delivery_name}")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.success("Estimate calculated. Confirm the final payable amount with the provider.")
 
-    st.markdown("### ✨ Extra services")
-    delivery = st.checkbox("🚚 Delivery (+₹30)")
-    membership = st.checkbox("💗 Member benefit (₹10 off)")
+    st.markdown("#### Product catalogue")
+    cols = st.columns(3)
+    for i, (name, p) in enumerate(PRODUCTS.items()):
+        with cols[i % 3]:
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.image(p["image"], use_container_width=True)
+            st.markdown(f"**{name}**")
+            st.caption(p["category"])
+            st.markdown(f"### {money(p['price'])}")
+            st.caption(p["note"])
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.markdown("### 🎨 Colour palette")
-    st.markdown(
-        f"""
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <div title="Pink" style="background:{PINK};width:30px;height:30px;border-radius:50%;"></div>
-          <div title="Royal Blue" style="background:{ROYAL_BLUE};width:30px;height:30px;border-radius:50%;"></div>
-          <div title="Sage Green" style="background:{SAGE_GREEN};width:30px;height:30px;border-radius:50%;"></div>
-          <div title="Peacock Green" style="background:{PEACOCK_GREEN};width:30px;height:30px;border-radius:50%;"></div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.caption("Illustrative catalogue • No live pharmacy data")
+with tabs[1]:
+    st.subheader("Compare estimated product prices")
+    st.write("Choose a product to compare its demo price with fictional provider benchmarks.")
+    product = st.selectbox("Product", list(PROVIDER_PRICES))
+    comparison = pd.DataFrame([{"Provider": k, "Sample unit price (₹)": v} for k, v in PROVIDER_PRICES[product].items()])
+    comparison = comparison.sort_values("Sample unit price (₹)").reset_index(drop=True)
+    comparison["Difference vs MediBill Demo (₹)"] = comparison["Sample unit price (₹)"] - PROVIDER_PRICES[product]["MediBill Demo"]
+    lowest = comparison.iloc[0]
+    a, b, c = st.columns(3)
+    a.metric("Lowest sample price", money(float(lowest["Sample unit price (₹)"])))
+    b.metric("Lowest sample provider", str(lowest["Provider"]))
+    c.metric("MediBill demo price", money(PROVIDER_PRICES[product]["MediBill Demo"]))
+    st.dataframe(comparison, use_container_width=True, hide_index=True)
+    st.bar_chart(comparison.set_index("Provider")[["Sample unit price (₹)"]])
+    st.warning("Provider labels and prices are fictional. They are not verified prices from Tata 1mg, PharmEasy, Apollo, Netmeds or local pharmacies.")
+    st.markdown("**To make this a real comparison:** use the same brand, strength and pack size; record source URLs and date/time checked; include delivery fees and coupon conditions; compare final payable totals.")
 
-# ============================================================
-# 8. ORDER INPUTS
-# ============================================================
-st.markdown(
-    '<div class="section-label">01 &nbsp; ✿ &nbsp; BUILD YOUR ORDER</div>',
-    unsafe_allow_html=True
-)
-st.write("Choose up to five products and enter the quantity for each.")
+with tabs[2]:
+    st.subheader("Find nearby pharmacies")
+    st.write("Enter a locality, landmark, PIN code or city. MediBill opens a map search rather than claiming to have live GPS or pharmacy inventory.")
+    location = st.text_input("Your area or PIN code", placeholder="For example: Sector 14, Sonipat or 131001")
+    search_type = st.selectbox("Search for", ["Pharmacies", "24-hour pharmacies", "Pharmacies with delivery", "Medical stores"])
+    if location.strip():
+        query = f"{search_type} near {location.strip()}"
+        c1, c2 = st.columns(2)
+        with c1:
+            st.link_button("Open Google Maps results", map_url("Google Maps", query), use_container_width=True)
+        with c2:
+            st.link_button("Open OpenStreetMap results", map_url("OpenStreetMap", query), use_container_width=True)
+        st.info("Map information can be incomplete. Call the pharmacy to confirm hours, stock, prescription requirements, delivery area and final price.")
+    else:
+        st.info("Enter your area or PIN code to create map links.")
+    st.markdown("#### Delivery methods")
+    st.dataframe(pd.DataFrame([{"Method": k, "Illustrative fee (₹)": v["fee"], "Timing / notes": v["eta"]} for k, v in DELIVERY.items()]), use_container_width=True, hide_index=True)
 
-selected_items = []
-product_names = list(medicine_catalogue.keys())
+with tabs[3]:
+    st.subheader("Frequently bought together and package ideas")
+    st.write("These are rule-based demo bundles, not recommendations based on real customer purchase history. They are not medical recommendations.")
+    for bundle in BUNDLES:
+        with st.container(border=True):
+            left, right = st.columns([2, 1])
+            subtotal = sum(PRODUCTS[n]["price"] * q for n, q in bundle["items"].items())
+            discounted = subtotal * .95
+            with left:
+                st.markdown(f"### {bundle['name']}")
+                st.write(bundle["desc"])
+                for n, q in bundle["items"].items():
+                    st.write(f"- {n} × {q} · {money(PRODUCTS[n]['price'] * q)}")
+                st.caption("The 5% bundle discount is hypothetical.")
+            with right:
+                st.metric("Regular total", money(subtotal))
+                st.metric("Sample bundle price", money(discounted))
+                st.caption(f"Sample saving: {money(subtotal - discounted)}")
+                if st.button("Add bundle to basket", key="bundle_" + bundle["name"]):
+                    for n, q in bundle["items"].items():
+                        index = list(PRODUCTS).index(n) + 1
+                        st.session_state[f"item_{index}"] = True
+                        st.session_state[f"qty_{index}"] = q
+                    st.rerun()
 
-# Loop: create five product slots in a two-column layout.
-for start in range(0, 5, 2):
-    columns = st.columns(2)
+with tabs[4]:
+    st.subheader("About MediBill")
+    st.write("MediBill is an academic Python and Streamlit prototype for estimating a pharmacy basket total. It demonstrates dictionaries, lists, functions, loops, conditionals, arithmetic, tables and CSV export.")
+    st.markdown("#### Interface improvements")
+    st.markdown("- Professional navy, blue and teal colour palette.\n- Product images and clearer catalogue cards.\n- Persistent basket controls and itemized receipt.\n- Separate price comparison, pharmacy search and bundle sections.\n- Delivery choices for standard, express, pickup and scheduled orders.")
+    st.markdown("#### Limitations")
+    st.markdown("- Prices, provider benchmarks, delivery fees and bundle patterns are sample data.\n- Pharmacy searches use external map results and do not guarantee stock or opening hours.\n- No payment processing, user accounts, inventory database, order history, or medical advice.")
+    st.markdown("#### Suggested next improvements")
+    st.markdown("- Replace sample comparison values with verified prices and source links.\n- Add automated tests for discounts, membership limits, delivery and empty baskets.\n- Capture screenshots of the running app for the project report.\n- Keep the main application in one `app.py` file to match the assignment instructions.")
 
-    # Loop: place one product slot in each column.
-    for offset, column in enumerate(columns):
-        index = start + offset
-
-        # If: skip a slot if its index is outside the five slots.
-        if index >= 5:
-            continue
-
-        with column:
-            with st.container(border=True):
-                st.markdown(
-                    f'<div class="mini-label">PRODUCT SLOT {index + 1}</div>',
-                    unsafe_allow_html=True
-                )
-
-                # String: product stores the selected product name.
-                product = st.selectbox(
-                    "Medicine or healthcare product",
-                    ["None"] + product_names,
-                    key=f"product_{index}"
-                )
-
-                if product != "None":
-                    # Dictionary lookup: find the selected product's price.
-                    unit_price = float(medicine_catalogue[product])
-
-                    st.markdown(
-                        f"""
-                        <div style="background:#FCEAF2;border-radius:10px;
-                                    padding:9px 12px;margin:4px 0 12px 0;color:#064E45;">
-                            💊 <b>{product}</b><br>
-                            <span style="font-size:12px;">Sample unit price: ₹{unit_price:,.2f}</span>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-                    # Integer: quantity is a whole number from 1 to 100.
-                    quantity = st.number_input(
-                        "Quantity",
-                        min_value=1,
-                        max_value=100,
-                        value=1,
-                        step=1,
-                        key=f"quantity_{index}"
-                    )
-
-                    # Dictionary: save details for the selected product.
-                    selected_items.append({
-                        "Medicine": product,
-                        "Unit Price (₹)": unit_price,
-                        "Quantity": int(quantity),
-                        "Line Total (₹)": unit_price * int(quantity)
-                    })
-                else:
-                    st.caption("Your next product can go here ♡")
-
-# ============================================================
-# 9. BILL SUMMARY
-# ============================================================
-st.markdown(
-    '<div class="section-label">02 &nbsp; ✿ &nbsp; YOUR BILL</div>',
-    unsafe_allow_html=True
-)
-
-# If/else: show a message if no products have been selected.
-if not selected_items:
-    st.warning("🌷 Your order is waiting! Choose at least one product above to calculate your bill.")
-else:
-    # Function call: calculate the bill using the selected inputs.
-    bill = calculate_bill(selected_items, discount_rate, delivery, membership)
-
-    metric1, metric2, metric3 = st.columns(3)
-    metric1.metric("🧺 Subtotal", f"₹{bill['subtotal']:,.2f}")
-    metric2.metric(
-        "🎀 Total savings",
-        f"₹{bill['discount'] + bill['membership_benefit']:,.2f}"
-    )
-    metric3.metric("💚 Amount payable", f"₹{bill['total']:,.2f}")
-
-    st.markdown("### 🧾 Your itemized receipt")
-
-    # DataFrame: display the selected items as a table.
-    receipt = pd.DataFrame(selected_items)
-    st.dataframe(
-        receipt,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Unit Price (₹)": st.column_config.NumberColumn("Unit Price", format="₹%.2f"),
-            "Line Total (₹)": st.column_config.NumberColumn("Line Total", format="₹%.2f")
-        }
-    )
-
-    # Display the bill breakdown.
-    with st.container(border=True):
-        st.markdown("#### 🌿 Price breakdown")
-        left, right = st.columns([3, 2])
-
-        with left:
-            st.write("Medicine subtotal")
-            st.write("Percentage discount")
-            st.write("Membership benefit")
-            st.write("Delivery charge")
-
-        with right:
-            st.markdown(
-                f"<div style='text-align:right;color:{PEACOCK_GREEN};'>₹{bill['subtotal']:,.2f}</div>",
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div style='text-align:right;color:{ROYAL_BLUE};'>− ₹{bill['discount']:,.2f}</div>",
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div style='text-align:right;color:{ROYAL_BLUE};'>− ₹{bill['membership_benefit']:,.2f}</div>",
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div style='text-align:right;color:{PEACOCK_GREEN};'>₹{bill['delivery_fee']:,.2f}</div>",
-                unsafe_allow_html=True
-            )
-
-        st.markdown(
-            f"""
-            <div class="total-banner">
-                <div class="caption">YOUR ESTIMATED TOTAL</div>
-                <div class="amount">₹{bill['total']:,.2f}</div>
-                <div class="caption">Thank you for choosing MediBill ♡</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # ========================================================
-    # 10. DOWNLOADABLE RECEIPT
-    # ========================================================
-    st.markdown("### 📥 Take your receipt with you")
-    csv_buffer = StringIO()
-    receipt.to_csv(csv_buffer, index=False)
-
-    st.download_button(
-        label="♡ Download itemized receipt (CSV)",
-        data=csv_buffer.getvalue(),
-        file_name="medibill_receipt.csv",
-        mime="text/csv",
-        use_container_width=True
-    )
-    st.success("Your estimated bill is ready! 🌸")
-
-# ============================================================
-# 11. FOOTER
-# ============================================================
 st.markdown("---")
-st.markdown("""
-<div class="medi-footer">
-    <div style="font-size:22px;margin-bottom:5px;">💊 🌿 💗</div>
-    <b style="color:#064E45;">MediBill Pharmacy Studio</b><br>
-    Made with care, colour and Python.<br><br>
-    Educational billing prototype only. All product prices, discounts and service charges are illustrative.
-    This application is not a live pharmacy catalogue, prescription service or medical recommendation system.
-</div>
-""", unsafe_allow_html=True)
-
-
-
+st.caption("MediBill · Academic prototype · Confirm all prices, availability and product information with a pharmacy before purchase.")
