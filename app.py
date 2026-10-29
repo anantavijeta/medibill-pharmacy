@@ -1,177 +1,34 @@
-
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
-from pathlib import Path
 from datetime import datetime
 from urllib.parse import quote_plus
+from pathlib import Path
 import html
 
-# ============================================================
-# MEDIBILL | PHARMACY BILLING APPLICATION
-# ============================================================
+st.set_page_config(page_title="MediBill | Pharmacy Billing", layout="wide")
 
-st.set_page_config(
-    page_title="MediBill | Pharmacy Billing",
-    page_icon="💊",
-    layout="wide"
-)
+NAVY, BLUE, TEAL = "#17324D", "#2563EB", "#0F766E"
+BORDER, INK, MUTED = "#D7DEE7", "#20262E", "#64748B"
 
-# -------------------- DESIGN SETTINGS ------------------------
-
-NAVY = "#17324D"
-BLUE = "#2563EB"
-TEAL = "#0F766E"
-BACKGROUND = "#F4F6F9"
-PAPER = "#FFFDF2"
-BORDER = "#D7DEE7"
-
+# ------------------------------------------------------------
+# IMAGE PATHS: supports images in the same folder as app.py
+# or inside an assets folder.
+# ------------------------------------------------------------
 APP_DIR = Path(__file__).resolve().parent
 ASSET_DIR = APP_DIR / "assets"
 
 
 def asset_path(filename):
-    """Find images in the repository root or assets folder."""
     if not filename:
         return None
 
-    for folder in (APP_DIR, ASSET_DIR):
-        path = folder / filename
+    for path in (APP_DIR / filename, ASSET_DIR / filename):
         if path.is_file():
             return str(path)
 
     return None
 
-
-# -------------------- CSS DESIGN -----------------------------
-
-st.markdown(
-    f"""
-    <style>
-    @import url(
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
-    );
-
-    .stApp {{
-        background-color: {BACKGROUND};
-    }}
-
-    html, body, [class*="css"] {{
-        font-family: Inter, sans-serif;
-    }}
-
-    [data-testid="stSidebar"] {{
-        background-color: #EDF2F7;
-    }}
-
-    .hero {{
-        background: linear-gradient(120deg, {NAVY}, #244C72, {TEAL});
-        color: white;
-        padding: 25px;
-        border-radius: 16px;
-        margin-bottom: 18px;
-    }}
-
-    .hero h1 {{
-        color: white;
-        font-size: 36px;
-        margin-bottom: 5px;
-    }}
-
-    .hero p {{
-        color: #E6EDF5;
-        margin-bottom: 0;
-    }}
-
-    div[data-testid="stMetric"] {{
-        background: white;
-        border: 1px solid {BORDER};
-        border-radius: 12px;
-        padding: 12px;
-    }}
-
-    .paper-bill {{
-        background: {PAPER};
-        color: #292820;
-        border: 1px solid #C9C4AA;
-        padding: 18px;
-        border-radius: 3px;
-        font-family: "Courier New", monospace;
-        box-shadow: 0 3px 12px #00000012;
-        overflow-x: auto;
-    }}
-
-    .paper-title {{
-        text-align: center;
-        font-weight: bold;
-        font-size: 19px;
-        letter-spacing: 2px;
-    }}
-
-    .paper-subtitle {{
-        text-align: center;
-        font-size: 10px;
-        margin: 4px 0;
-    }}
-
-    .paper-line {{
-        border-top: 1px dashed #77745F;
-        margin: 10px 0;
-    }}
-
-    .paper-meta {{
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        font-size: 10px;
-        margin: 5px 0;
-    }}
-
-    .paper-bill table {{
-        width: 100%;
-        border-collapse: collapse;
-        font-family: "Courier New", monospace;
-        font-size: 10px;
-        margin-top: 8px;
-    }}
-
-    .paper-bill th {{
-        border-top: 1px solid #77745F;
-        border-bottom: 1px solid #77745F;
-        text-align: left;
-        padding: 6px 3px;
-    }}
-
-    .paper-bill td {{
-        padding: 6px 3px;
-        border-bottom: 1px dotted #C9C4AA;
-        vertical-align: top;
-    }}
-
-    .paper-bill .num {{
-        text-align: right;
-        white-space: nowrap;
-    }}
-
-    .paper-total {{
-        text-align: right;
-        font-weight: bold;
-        font-size: 15px;
-        margin-top: 10px;
-    }}
-
-    .small-note {{
-        font-size: 10px;
-        line-height: 1.5;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# IMAGE CATALOGUE
-# ============================================================
 
 PRODUCT_IMAGES = {
     "Digital Thermometer": "digital_thermometer.png",
@@ -189,7 +46,6 @@ PRODUCT_IMAGES = {
 
 CATEGORY_IMAGES = {
     "Pain relief": "medicine_blister_packs.png",
-    "Topical care": "medicine_blister_packs.png",
     "Allergy care": "medicine_blister_packs.png",
     "Cold care": "medicine_blister_packs.png",
     "Throat care": "medicine_capsules.png",
@@ -200,18 +56,94 @@ CATEGORY_IMAGES = {
     "First aid": "first_aid_bandage.png",
     "Devices": "digital_thermometer.png",
     "Personal care": "petroleum_jelly.png",
+    "Topical care": "medicine_blister_packs.png",
     "Wellness": "vitamin_c.png",
     "Baby care": "petroleum_jelly.png",
     "Nasal care": "medicine_capsules.png",
 }
 
+# ------------------------------------------------------------
+# WEBSITE STYLING
+# ------------------------------------------------------------
+st.markdown(
+    f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-# ============================================================
-# PRODUCT DATABASE
-# Prices are illustrative for an academic demonstration.
-# ============================================================
+    html, body, [class*="css"] {{
+        font-family: Inter, sans-serif;
+    }}
 
-RAW_PRODUCTS = [
+    .stApp {{
+        background: #F4F6F9;
+        color: {INK};
+    }}
+
+    [data-testid="stSidebar"] {{
+        background: #EEF2F6;
+        border-right: 1px solid {BORDER};
+    }}
+
+    .hero {{
+        background: linear-gradient(115deg, {NAVY}, #244C72 65%, {TEAL});
+        padding: 1.3rem 1.5rem;
+        border-radius: 15px;
+        color: white;
+        margin-bottom: 1rem;
+    }}
+
+    .hero h1 {{
+        color: white;
+        margin: 0;
+        font-size: 2.1rem;
+    }}
+
+    .hero p {{
+        color: #E2E8F0;
+        margin: .25rem 0 0 0;
+    }}
+
+    div[data-testid="stMetric"] {{
+        background: white;
+        border: 1px solid {BORDER};
+        padding: .75rem 1rem;
+        border-radius: 10px;
+    }}
+
+    div.stButton > button,
+    div.stDownloadButton > button {{
+        border-radius: 8px;
+        font-weight: 600;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ------------------------------------------------------------
+# HOMEPAGE
+# ------------------------------------------------------------
+banner = asset_path("pharmacy_interior.png")
+
+if banner:
+    st.image(banner, use_container_width=True)
+
+st.markdown(
+    """
+    <div class="hero">
+        <h1>MediBill</h1>
+        <p>Pharmacy catalogue, live billing, basket comparison
+        and a classic paper-style receipt.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ------------------------------------------------------------
+# PRODUCT CATALOGUE
+# Sample educational prices, not verified retail prices.
+# ------------------------------------------------------------
+DATA = [
     ("Dolo 650", "Paracetamol 650 mg", "Micro Labs", "Pain relief", 32),
     ("Calpol 500", "Paracetamol 500 mg", "GSK", "Pain relief", 24),
     ("Crocin Advance", "Paracetamol 500 mg", "Haleon", "Pain relief", 28),
@@ -242,7 +174,7 @@ RAW_PRODUCTS = [
     ("Supradyn", "Multivitamin supplement", "Bayer", "Vitamins", 55),
     ("Shelcal 500", "Calcium supplement", "Torrent Pharma", "Vitamins", 125),
     ("Neurobion Forte", "Vitamin supplement", "P&G Health", "Vitamins", 42),
-    ("Evion 400", "Vitamin E supplement", "P&G", "Vitamins", 38),
+    ("Evion 400", "Vitamin E supplement", "Procter & Gamble", "Vitamins", 38),
     ("Becosules", "Vitamin supplement", "Pfizer", "Vitamins", 45),
     ("ORS Powder", "Oral rehydration salts", "Demo generic brand", "Hydration", 18),
     ("Betadine Ointment", "Antiseptic ointment", "Win-Medicare", "First aid", 80),
@@ -267,23 +199,35 @@ RAW_PRODUCTS = [
     ("Pampers Diapers", "Baby diaper pack", "P&G", "Baby care", 299),
     ("Johnson's Baby Lotion", "Baby lotion", "Kenvue", "Baby care", 145),
     ("Otrivin Adult", "Nasal spray", "Haleon", "Nasal care", 95),
-    ("Nasivion Adult", "Nasal drops", "P&G", "Nasal care", 85),
+    ("Nasivion Adult", "Nasal drops", "Procter & Gamble", "Nasal care", 85),
 ]
 
 PRODUCTS = {
-    name: {
-        "generic": generic,
-        "company": company,
-        "category": category,
-        "price": float(price),
+    row[0]: {
+        "generic": row[1],
+        "company": row[2],
+        "category": row[3],
+        "price": float(row[4]),
     }
-    for name, generic, company, category, price in RAW_PRODUCTS
+    for row in DATA
 }
 
+# ------------------------------------------------------------
+# SETTINGS, SAMPLE COMPARISONS AND BUNDLES
+# ------------------------------------------------------------
+PROVIDERS = {
+    "MediBill demo catalogue": 1.00,
+    "Tata 1mg sample estimate": 1.04,
+    "PharmEasy sample estimate": 0.97,
+    "Apollo 24|7 sample estimate": 1.02,
+}
 
-# ============================================================
-# BUNDLES AND PROVIDER ESTIMATES
-# ============================================================
+DELIVERY = {
+    "Standard delivery (2–4 hours)": 25.0,
+    "Express delivery (within 90 minutes)": 60.0,
+    "Scheduled delivery": 20.0,
+    "Store pickup": 0.0,
+}
 
 BUNDLES = {
     "First-Aid Basics": {
@@ -305,24 +249,6 @@ BUNDLES = {
     },
 }
 
-PROVIDERS = {
-    "MediBill demo catalogue": 1.00,
-    "Tata 1mg sample estimate": 1.04,
-    "PharmEasy sample estimate": 0.97,
-    "Apollo 24|7 sample estimate": 1.02,
-}
-
-DELIVERY_OPTIONS = {
-    "Standard delivery (2–4 hours)": 25.0,
-    "Express delivery (within 90 minutes)": 60.0,
-    "Scheduled delivery": 20.0,
-    "Store pickup": 0.0,
-}
-
-
-# ============================================================
-# BILL CALCULATIONS
-# ============================================================
 
 def money(value):
     return f"₹{value:,.2f}"
@@ -336,101 +262,172 @@ def calculate_bill(cart, discount_rate, delivery_fee, membership, tax_rate):
 
     discount = subtotal * discount_rate
     after_discount = max(0.0, subtotal - discount)
-
     membership_discount = min(10.0, after_discount) if membership else 0.0
-
-    taxable_amount = max(0.0, after_discount - membership_discount)
-    tax = taxable_amount * tax_rate
+    taxable = max(0.0, after_discount - membership_discount)
+    tax = taxable * tax_rate
 
     # Do not charge delivery if the cart is empty.
     actual_delivery = delivery_fee if cart else 0.0
-
-    total = taxable_amount + tax + actual_delivery
 
     return {
         "subtotal": subtotal,
         "discount": discount,
         "membership": membership_discount,
-        "taxable": taxable_amount,
+        "taxable": taxable,
         "tax": tax,
         "delivery": actual_delivery,
-        "total": total,
+        "total": taxable + tax + actual_delivery,
     }
 
 
-def create_maps_url(location):
-    if location.strip():
-        query = "pharmacies near " + location.strip()
-    else:
-        query = "pharmacies near me"
-
+def maps_url(location):
+    query = (
+        f"pharmacies near {location}"
+        if location.strip()
+        else "pharmacies near me"
+    )
     return (
         "https://www.google.com/maps/search/?api=1&query="
         + quote_plus(query)
     )
 
 
-# ============================================================
+def add_bundle(items):
+    for name, quantity in items.items():
+        key = "qty_" + name
+        current = int(st.session_state.get(key, 0))
+        st.session_state[key] = min(100, current + quantity)
+
+
+def clear_cart():
+    for name in PRODUCTS:
+        st.session_state["qty_" + name] = 0
+
+    st.session_state.invoice_no = (
+        "MB" + datetime.now().strftime("%y%m%d%H%M")
+    )
+
+
+# ------------------------------------------------------------
 # RECEIPT HTML
-# IMPORTANT: HTML is returned by this function and rendered
-# with unsafe_allow_html=True below. Do not paste its output
-# separately into the Python file.
-# ============================================================
-
-def receipt_html(cart, bill, discount_label, delivery_label, invoice_number):
-    timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
-
+# IMPORTANT: CSS is inside the receipt HTML because components.html
+# displays content in a separate frame.
+# ------------------------------------------------------------
+def receipt_html(cart, bill, discount_label, delivery_label, invoice):
+    now = datetime.now().strftime("%d-%m-%Y %H:%M")
     rows = ""
 
     for name, quantity in cart.items():
         item = PRODUCTS[name]
-        safe_name = html.escape(name)
-        safe_company = html.escape(item["company"])
+        escaped_name = html.escape(name)
+        escaped_company = html.escape(item["company"])
 
-        amount = item["price"] * quantity
-
-        rows += f"""
-        <tr>
-            <td>
-                {safe_name}<br>
-                <small>{safe_company}</small>
-            </td>
-            <td class="num">{quantity}</td>
-            <td class="num">{item["price"]:.2f}</td>
-            <td class="num">{amount:.2f}</td>
-        </tr>
-        """
+        rows += (
+            f"<tr>"
+            f"<td>{escaped_name}<br><small>{escaped_company}</small></td>"
+            f"<td class='num'>{quantity}</td>"
+            f"<td class='num'>{item['price']:.2f}</td>"
+            f"<td class='num'>{item['price'] * quantity:.2f}</td>"
+            f"</tr>"
+        )
 
     if not rows:
-        rows = """
-        <tr>
-            <td colspan="4" style="text-align:center;padding:18px">
-                No items added
-            </td>
-        </tr>
-        """
-
-    safe_invoice = html.escape(invoice_number)
-    safe_discount = html.escape(discount_label)
-    safe_delivery = html.escape(delivery_label)
+        rows = (
+            "<tr><td colspan='4' "
+            "style='text-align:center;padding:18px'>"
+            "No items added</td></tr>"
+        )
 
     return f"""
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }}
+
+        .paper-bill {{
+            background: #fffdf2;
+            color: #292820;
+            border: 1px solid #c9c4aa;
+            padding: 18px;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 3px 12px #00000012;
+            box-sizing: border-box;
+            width: 100%;
+        }}
+
+        .paper-title {{
+            text-align: center;
+            font-weight: bold;
+            font-size: 19px;
+            letter-spacing: 2px;
+        }}
+
+        .paper-subtitle {{
+            text-align: center;
+            font-size: 10px;
+            margin: 3px 0;
+        }}
+
+        .paper-line {{
+            border-top: 1px dashed #77745f;
+            margin: 9px 0;
+        }}
+
+        .paper-meta {{
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 10px;
+        }}
+
+        .paper-bill table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            margin-top: 8px;
+        }}
+
+        .paper-bill th {{
+            border-top: 1px solid #6e6b5c;
+            border-bottom: 1px solid #6e6b5c;
+            text-align: left;
+            padding: 5px 2px;
+        }}
+
+        .paper-bill td {{
+            padding: 5px 2px;
+            vertical-align: top;
+            border-bottom: 1px dotted #c9c4aa;
+        }}
+
+        .paper-bill .num {{
+            text-align: right;
+            white-space: nowrap;
+        }}
+
+        .paper-total {{
+            text-align: right;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 8px;
+        }}
+    </style>
+
     <div class="paper-bill">
         <div class="paper-title">MEDIBILL PHARMACY</div>
-
+        <div class="paper-subtitle">SAMPLE BILLING COUNTER</div>
         <div class="paper-subtitle">
-            SAMPLE BILLING COUNTER
-        </div>
-
-        <div class="paper-subtitle">
-            Educational demonstration - Not a tax invoice
+            Educational demonstration • Not a tax invoice
         </div>
 
         <div class="paper-line"></div>
 
         <div class="paper-meta">
-            <span>Invoice: {safe_invoice}</span>
-            <span>{timestamp}</span>
+            <span>Invoice: {html.escape(invoice)}</span>
+            <span>{now}</span>
         </div>
 
         <div class="paper-meta">
@@ -456,128 +453,66 @@ def receipt_html(cart, bill, discount_label, delivery_label, invoice_number):
 
         <div class="paper-meta">
             <span>Subtotal</span>
-            <span>{bill["subtotal"]:.2f}</span>
+            <span>{bill['subtotal']:.2f}</span>
         </div>
 
         <div class="paper-meta">
-            <span>Discount ({safe_discount})</span>
-            <span>-{bill["discount"]:.2f}</span>
+            <span>Discount ({html.escape(discount_label)})</span>
+            <span>-{bill['discount']:.2f}</span>
         </div>
 
         <div class="paper-meta">
             <span>Membership benefit</span>
-            <span>-{bill["membership"]:.2f}</span>
+            <span>-{bill['membership']:.2f}</span>
         </div>
 
         <div class="paper-meta">
             <span>Illustrative tax</span>
-            <span>{bill["tax"]:.2f}</span>
+            <span>{bill['tax']:.2f}</span>
         </div>
 
         <div class="paper-meta">
-            <span>Delivery: {safe_delivery}</span>
-            <span>{bill["delivery"]:.2f}</span>
+            <span>Delivery: {html.escape(delivery_label)}</span>
+            <span>{bill['delivery']:.2f}</span>
         </div>
 
         <div class="paper-line"></div>
 
-        <div class="paper-total">
-            TOTAL: ₹{bill["total"]:.2f}
-        </div>
+        <div class="paper-total">TOTAL: ₹{bill['total']:.2f}</div>
 
         <div class="paper-line"></div>
 
-        <div class="small-note">
-            Payment status: Not collected
+        <div style="font-size:10px">Payment status: Not collected</div>
+        <div style="font-size:10px">
+            No live stock, batch, expiry or tax-registration data is connected.
         </div>
-
-        <div class="small-note">
-            Live stock, batch, expiry and tax-registration data are not connected.
-        </div>
-
-        <div class="small-note" style="text-align:center;margin-top:12px">
+        <div style="font-size:10px;text-align:center;margin-top:12px">
             Thank you for using MediBill.
         </div>
     </div>
     """
 
 
-# ============================================================
-# SESSION STATE
-# ============================================================
-
-for name in PRODUCTS:
-    st.session_state.setdefault("qty_" + name, 0)
+# ------------------------------------------------------------
+# INITIALISE CART AND INVOICE NUMBER
+# ------------------------------------------------------------
+for product in PRODUCTS:
+    st.session_state.setdefault("qty_" + product, 0)
 
 st.session_state.setdefault(
     "invoice_no",
-    "MB" + datetime.now().strftime("%y%m%d%H%M%S")
+    "MB" + datetime.now().strftime("%y%m%d%H%M"),
 )
 
-
-def add_bundle_to_cart(bundle):
-    for name, quantity in bundle.items():
-        key = "qty_" + name
-        current = int(st.session_state.get(key, 0))
-        st.session_state[key] = min(100, current + quantity)
-
-
-def clear_cart():
-    for name in PRODUCTS:
-        st.session_state["qty_" + name] = 0
-
-    st.session_state["invoice_no"] = (
-        "MB" + datetime.now().strftime("%y%m%d%H%M%S")
-    )
-
-
-# ============================================================
-# HOMEPAGE
-# ============================================================
-
-banner = asset_path("pharmacy_interior.png")
-
-if banner:
-    st.image(banner, use_container_width=True)
-
-st.markdown(
-    """
-    <div class="hero">
-        <h1>💊 MediBill</h1>
-        <p>
-            Your pharmacy catalogue, smart billing counter,
-            basket comparison and paper-style receipt.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-metric1, metric2, metric3 = st.columns(3)
-
-with metric1:
-    st.metric("Catalogue Products", len(PRODUCTS))
-
-with metric2:
-    st.metric(
-        "Product Categories",
-        len({item["category"] for item in PRODUCTS.values()})
-    )
-
-with metric3:
-    st.metric("Sample Providers", len(PROVIDERS))
-
-
-# ============================================================
-# SIDEBAR
-# ============================================================
-
+# ------------------------------------------------------------
+# SIDEBAR SETTINGS
+# ------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## Order Settings")
+    st.markdown("### Order settings")
 
     discount_choice = st.selectbox(
         "Discount",
-        ["No discount", "5% off", "10% off"]
+        ["No discount", "5% off", "10% off"],
     )
 
     discount_rate = {
@@ -586,18 +521,19 @@ with st.sidebar:
         "10% off": 0.10,
     }[discount_choice]
 
-    membership = st.checkbox("Membership benefit (up to ₹10 off)")
+    membership = st.checkbox("Membership benefit (₹10 off)")
 
     delivery_method = st.selectbox(
         "Delivery method",
-        list(DELIVERY_OPTIONS.keys())
+        list(DELIVERY.keys()),
     )
 
-    delivery_fee = DELIVERY_OPTIONS[delivery_method]
+    delivery_fee = DELIVERY[delivery_method]
+    st.caption("Sample delivery fee: " + money(delivery_fee))
 
     tax_choice = st.selectbox(
         "Illustrative tax setting",
-        ["No tax", "5% demo tax", "12% demo tax"]
+        ["No tax", "5% demo tax", "12% demo tax"],
     )
 
     tax_rate = {
@@ -606,108 +542,111 @@ with st.sidebar:
         "12% demo tax": 0.12,
     }[tax_choice]
 
-    st.caption("Tax rates are for arithmetic demonstration only.")
-
+    st.caption("Tax settings are for demonstrating arithmetic only.")
     st.markdown("---")
-    st.markdown("### Find Nearby Pharmacies")
 
     location = st.text_input(
         "Area or PIN code",
-        placeholder="Enter area or PIN code"
+        placeholder="e.g., Sonipat or 131001",
     )
 
     st.link_button(
-        "Search Google Maps",
-        create_maps_url(location),
-        use_container_width=True
+        "Find nearby pharmacies",
+        maps_url(location),
+        use_container_width=True,
     )
 
 
-# ============================================================
-# APPLICATION TABS
-# ============================================================
-
+# ------------------------------------------------------------
+# MAIN TABS
+# ------------------------------------------------------------
 shop_tab, bundles_tab, compare_tab, pharmacy_tab = st.tabs(
     [
-        "Products & Paper Bill",
+        "Products & paper bill",
         "Bundles",
-        "Price Comparison",
-        "Nearby Pharmacies",
+        "Price comparison",
+        "Nearby pharmacies",
     ]
 )
 
-
-# ============================================================
-# TAB 1: PRODUCT CATALOGUE AND RECEIPT
-# ============================================================
-
+# ------------------------------------------------------------
+# PRODUCTS AND BILLING RECEIPT
+# ------------------------------------------------------------
 with shop_tab:
-
     product_col, receipt_col = st.columns([1.4, 1], gap="large")
 
     with product_col:
-        st.subheader("Product Catalogue")
+        st.subheader("Product catalogue")
 
         search = st.text_input(
-            "Search brand, ingredient or company",
-            placeholder="e.g. Dolo, Cipla, vitamin"
+            "Search by brand, ingredient or company",
+            placeholder="e.g., Dolo, Cipla, vitamin",
         )
 
         categories = ["All categories"] + sorted(
-            {item["category"] for item in PRODUCTS.values()}
+            {product["category"] for product in PRODUCTS.values()}
         )
 
-        selected_category = st.selectbox(
-            "Filter by category",
-            categories
-        )
+        category = st.selectbox("Filter category", categories)
 
-        filtered_products = []
-
-        for name, item in PRODUCTS.items():
-            matches_search = (
+        shown = [
+            name
+            for name, product in PRODUCTS.items()
+            if (
                 search.lower() in name.lower()
-                or search.lower() in item["generic"].lower()
-                or search.lower() in item["company"].lower()
+                or search.lower() in product["generic"].lower()
+                or search.lower() in product["company"].lower()
             )
-
-            matches_category = (
-                selected_category == "All categories"
-                or item["category"] == selected_category
+            and (
+                category == "All categories"
+                or product["category"] == category
             )
-
-            if matches_search and matches_category:
-                filtered_products.append(name)
+        ]
 
         st.caption(
-            f"{len(filtered_products)} products found "
-            f"out of {len(PRODUCTS)}"
+            f"{len(shown)} products shown · "
+            f"{len(PRODUCTS)} catalogue entries"
         )
 
-        if not filtered_products:
-            st.warning("No products found. Try a different search.")
+        for start in range(0, len(shown), 2):
+            cols = st.columns(2)
 
-        for start in range(0, len(filtered_products), 2):
-            columns = st.columns(2)
-
-            for index, name in enumerate(filtered_products[start:start + 2]):
+            for index, name in enumerate(shown[start:start + 2]):
                 item = PRODUCTS[name]
 
-                with columns[index]:
+                with cols[index]:
                     with st.container(border=True):
-
                         image_file = (
                             PRODUCT_IMAGES.get(name)
                             or CATEGORY_IMAGES.get(item["category"])
                             or "medicine_blister_packs.png"
                         )
 
-                        image = asset_path(image_file)
+                        image_file_path = asset_path(image_file)
 
-                        if image:
-                            st.image(image, use_container_width=True)
+                        if image_file_path:
+                            st.image(
+                                image_file_path,
+                                use_container_width=True,
+                            )
                         else:
-                            st.caption("Product image unavailable")
+                            st.markdown(
+                                """
+                                <div style="
+                                    height:120px;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    background:#EEF2F6;
+                                    border-radius:10px;
+                                    color:#64748B;
+                                    font-size:14px;
+                                ">
+                                    Product image unavailable
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
 
                         st.markdown(f"**{name}**")
                         st.caption(item["generic"])
@@ -715,7 +654,7 @@ with shop_tab:
                         st.markdown(
                             f"<span style='color:{TEAL};font-weight:700'>"
                             f"{money(item['price'])}</span>",
-                            unsafe_allow_html=True
+                            unsafe_allow_html=True,
                         )
 
                         st.caption(
@@ -727,75 +666,61 @@ with shop_tab:
                             min_value=0,
                             max_value=100,
                             step=1,
-                            key="qty_" + name
+                            key="qty_" + name,
                         )
 
-    # Build the cart from the quantities in session state.
-    cart = {
-        name: int(st.session_state["qty_" + name])
-        for name in PRODUCTS
-        if int(st.session_state["qty_" + name]) > 0
-    }
-
-    bill = calculate_bill(
-        cart,
-        discount_rate,
-        delivery_fee,
-        membership,
-        tax_rate
-    )
-
     with receipt_col:
-        st.subheader("Paper-Style Receipt")
+        cart = {
+            name: int(st.session_state["qty_" + name])
+            for name in PRODUCTS
+            if int(st.session_state["qty_" + name]) > 0
+        }
 
-        st.caption(
-            "Your receipt updates automatically when quantities or settings change."
+        bill = calculate_bill(
+            cart,
+            discount_rate,
+            delivery_fee,
+            membership,
+            tax_rate,
         )
 
-        # IMPORTANT: Render the returned HTML as HTML.
-        # Do not print receipt_html(...) with st.write().
-        st.markdown(
+        st.subheader("Printed-paper style receipt")
+        st.caption("Updates when you change products or order settings.")
+
+        # The receipt is rendered inside an HTML frame.
+        # This prevents the HTML tags from appearing as raw text.
+        components.html(
             receipt_html(
                 cart,
                 bill,
                 discount_choice,
                 delivery_method,
-                st.session_state["invoice_no"]
+                st.session_state.invoice_no,
             ),
-            unsafe_allow_html=True
+            height=620,
+            scrolling=True,
         )
 
-        st.markdown("### Bill Summary")
-
-        st.metric("Subtotal", money(bill["subtotal"]))
-        st.metric("Total Discount", money(
-            bill["discount"] + bill["membership"]
-        ))
-        st.metric("Delivery Fee", money(bill["delivery"]))
-        st.metric("Final Total", money(bill["total"]))
-
         if cart:
-            receipt_rows = []
-
-            for name, quantity in cart.items():
-                item = PRODUCTS[name]
-
-                receipt_rows.append({
+            rows = [
+                {
                     "Product": name,
-                    "Company": item["company"],
-                    "Description": item["generic"],
+                    "Company": PRODUCTS[name]["company"],
+                    "Description": PRODUCTS[name]["generic"],
                     "Quantity": quantity,
-                    "Unit Price": item["price"],
-                    "Amount": item["price"] * quantity,
-                })
+                    "Unit price": PRODUCTS[name]["price"],
+                    "Amount": PRODUCTS[name]["price"] * quantity,
+                }
+                for name, quantity in cart.items()
+            ]
 
-            receipt_rows.extend([
+            rows += [
                 {
                     "Product": "Subtotal",
                     "Company": "",
                     "Description": "",
                     "Quantity": "",
-                    "Unit Price": "",
+                    "Unit price": "",
                     "Amount": bill["subtotal"],
                 },
                 {
@@ -803,23 +728,23 @@ with shop_tab:
                     "Company": "",
                     "Description": discount_choice,
                     "Quantity": "",
-                    "Unit Price": "",
+                    "Unit price": "",
                     "Amount": -bill["discount"],
                 },
                 {
-                    "Product": "Membership Benefit",
+                    "Product": "Membership benefit",
                     "Company": "",
                     "Description": "",
                     "Quantity": "",
-                    "Unit Price": "",
+                    "Unit price": "",
                     "Amount": -bill["membership"],
                 },
                 {
-                    "Product": "Illustrative Tax",
+                    "Product": "Illustrative tax",
                     "Company": "",
                     "Description": tax_choice,
                     "Quantity": "",
-                    "Unit Price": "",
+                    "Unit price": "",
                     "Amount": bill["tax"],
                 },
                 {
@@ -827,56 +752,48 @@ with shop_tab:
                     "Company": "",
                     "Description": delivery_method,
                     "Quantity": "",
-                    "Unit Price": "",
+                    "Unit price": "",
                     "Amount": bill["delivery"],
                 },
                 {
-                    "Product": "FINAL TOTAL",
+                    "Product": "TOTAL",
                     "Company": "",
                     "Description": "",
                     "Quantity": "",
-                    "Unit Price": "",
+                    "Unit price": "",
                     "Amount": bill["total"],
                 },
-            ])
+            ]
 
-            csv_content = pd.DataFrame(receipt_rows).to_csv(
-                index=False
-            ).encode("utf-8")
+            csv_data = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
 
             st.download_button(
-                "Download Itemised Receipt (CSV)",
-                data=csv_content,
-                file_name=(
-                    f"medibill_{st.session_state['invoice_no']}.csv"
-                ),
+                "Download itemised receipt (CSV)",
+                csv_data,
+                file_name=f"medibill_{st.session_state.invoice_no}.csv",
                 mime="text/csv",
-                use_container_width=True
-            )
-
-        else:
-            st.info(
-                "Your cart is empty. Add a product to generate an itemised receipt."
+                use_container_width=True,
             )
 
         st.button(
-            "Clear Cart",
+            "Clear cart",
+            use_container_width=True,
             on_click=clear_cart,
-            use_container_width=True
         )
 
 
-# ============================================================
-# TAB 2: CONVENIENCE BUNDLES
-# ============================================================
-
+# ------------------------------------------------------------
+# CONVENIENCE BUNDLES
+# ------------------------------------------------------------
 with bundles_tab:
-    st.subheader("Convenience Bundles")
+    st.subheader("Convenience bundles")
 
     st.write(
-        "Predefined product groups for demonstration. "
-        "These are not medical recommendations."
+        "Example groupings only. They are not medical recommendations "
+        "or derived from real purchase history."
     )
+
+    cols = st.columns(2)
 
     bundle_images = {
         "First-Aid Basics": "first_aid_bandage.png",
@@ -885,175 +802,188 @@ with bundles_tab:
         "Everyday Personal Care": "petroleum_jelly.png",
     }
 
-    bundle_columns = st.columns(2)
-
-    for index, (bundle_name, bundle_items) in enumerate(BUNDLES.items()):
-        with bundle_columns[index % 2]:
+    for index, (bundle_name, items) in enumerate(BUNDLES.items()):
+        with cols[index % 2]:
             with st.container(border=True):
-
-                image = asset_path(bundle_images.get(bundle_name))
-
-                if image:
-                    st.image(image, use_container_width=True)
-
-                st.markdown(f"### {bundle_name}")
-
-                bundle_total = sum(
-                    PRODUCTS[name]["price"] * quantity
-                    for name, quantity in bundle_items.items()
+                bundle_image = bundle_images.get(bundle_name)
+                bundle_image_path = (
+                    asset_path(bundle_image) if bundle_image else None
                 )
 
-                discounted_total = bundle_total * 0.95
+                if bundle_image_path:
+                    st.image(
+                        bundle_image_path,
+                        use_container_width=True,
+                    )
+
+                st.markdown(f"#### {bundle_name}")
+
+                total = sum(
+                    PRODUCTS[name]["price"] * quantity
+                    for name, quantity in items.items()
+                )
 
                 st.markdown(
-                    f"**Sample bundle total: {money(discounted_total)}**"
+                    f"**Sample bundle total: {money(total * 0.95)}**"
                 )
 
-                st.caption(
-                    f"Illustrative 5% bundle discount. "
-                    f"Original total: {money(bundle_total)}"
-                )
+                st.caption("Includes an illustrative 5% bundle discount.")
 
-                for name, quantity in bundle_items.items():
+                for name, quantity in items.items():
                     st.write(f"- {name} × {quantity}")
 
                 st.button(
-                    "Add Bundle to Cart",
-                    key="add_bundle_" + bundle_name,
-                    on_click=add_bundle_to_cart,
-                    args=(bundle_items,),
-                    use_container_width=True
+                    "Add bundle to cart",
+                    key="bundle_" + bundle_name,
+                    use_container_width=True,
+                    on_click=add_bundle,
+                    args=(items,),
                 )
 
+    st.info(
+        "A genuine frequently-bought-together feature would require "
+        "anonymised transaction data. This prototype uses predefined bundles."
+    )
 
-# ============================================================
-# TAB 3: SAMPLE PRICE COMPARISON
-# ============================================================
 
+# ------------------------------------------------------------
+# PRICE COMPARISON
+# These are estimates, not live provider prices.
+# ------------------------------------------------------------
 with compare_tab:
-    st.subheader("Basket Price Comparison")
+    st.subheader("Compare estimated basket prices")
 
     st.warning(
-        "These provider prices are illustrative estimates, not live prices."
+        "Provider prices are sample estimates derived from MediBill "
+        "catalogue prices. They are not live or verified quotes."
     )
 
-    selected_products = st.multiselect(
-        "Choose products to compare",
+    selected = st.multiselect(
+        "Select products to compare",
         list(PRODUCTS.keys()),
-        default=["Dolo 650", "Electral", "Band-Aid"]
+        default=["Dolo 650", "Electral", "Band-Aid"],
     )
 
-    if selected_products:
-        comparison_rows = []
+    if selected:
+        rows = []
 
-        for name in selected_products:
-            item = PRODUCTS[name]
-
+        for name in selected:
+            product = PRODUCTS[name]
             row = {
                 "Product": name,
-                "Company": item["company"],
+                "Company": product["company"],
             }
 
             for provider, multiplier in PROVIDERS.items():
-                row[provider] = round(item["price"] * multiplier, 2)
+                row[provider] = round(
+                    product["price"] * multiplier,
+                    2,
+                )
 
-            comparison_rows.append(row)
+            row["Lowest sample price"] = min(
+                round(product["price"] * multiplier, 2)
+                for multiplier in PROVIDERS.values()
+            )
 
-        comparison_df = pd.DataFrame(comparison_rows)
+            rows.append(row)
+
+        df = pd.DataFrame(rows)
+
+        currency_columns = [
+            column
+            for column in df.columns
+            if column not in ("Product", "Company")
+        ]
 
         st.dataframe(
-            comparison_df,
+            df.style.format(
+                {column: "₹{:.2f}" for column in currency_columns}
+            ),
             hide_index=True,
-            use_container_width=True
+            use_container_width=True,
         )
 
-        provider_totals = {
+        totals = {
             provider: sum(
                 round(PRODUCTS[name]["price"] * multiplier, 2)
-                for name in selected_products
+                for name in selected
             )
             for provider, multiplier in PROVIDERS.items()
         }
 
-        st.markdown("### Estimated Basket Totals")
+        st.markdown("#### Basket total by provider")
+        cols = st.columns(len(totals))
 
-        metrics = st.columns(len(provider_totals))
-
-        for index, (provider, total) in enumerate(provider_totals.items()):
-            with metrics[index]:
+        for index, (provider, total) in enumerate(totals.items()):
+            with cols[index]:
                 st.metric(provider, money(total))
 
-        cheapest_provider = min(provider_totals, key=provider_totals.get)
+        cheapest = min(totals, key=totals.get)
 
         st.success(
-            f"Lowest illustrative basket: {cheapest_provider} "
-            f"({money(provider_totals[cheapest_provider])})"
+            f"Lowest sample basket: {cheapest} · {money(totals[cheapest])}"
         )
 
     st.caption(
-        "Real price comparison requires verified matching brands, "
-        "strengths, pack sizes, sellers, discounts and delivery fees."
+        "For a fair comparison, verify exact brand, strength, pack size, "
+        "seller, availability, discounts, delivery fee and date."
     )
 
-    provider_columns = st.columns(3)
-
-    external_providers = [
+    provider_links = [
         ("Tata 1mg", "https://www.1mg.com/"),
         ("PharmEasy", "https://pharmeasy.in/"),
         ("Apollo 24|7", "https://www.apollo247.com/"),
     ]
 
-    for index, (name, url) in enumerate(external_providers):
-        with provider_columns[index]:
+    cols = st.columns(3)
+
+    for index, (label, url) in enumerate(provider_links):
+        with cols[index]:
             st.link_button(
-                "Open " + name,
+                "Open " + label,
                 url,
-                use_container_width=True
+                use_container_width=True,
             )
 
 
-# ============================================================
-# TAB 4: NEARBY PHARMACY SEARCH
-# ============================================================
-
+# ------------------------------------------------------------
+# NEARBY PHARMACIES
+# ------------------------------------------------------------
 with pharmacy_tab:
-    st.subheader("Find Nearby Pharmacies")
+    st.subheader("Nearby pharmacies")
 
-    map_location = st.text_input(
-        "Enter your area or PIN code",
-        placeholder="e.g. Sonipat or 131001",
-        key="pharmacy_map_location"
+    search_location = st.text_input(
+        "Area or PIN code",
+        value=location,
+        key="map_location",
     )
 
     st.write(
-        "MediBill opens a Google Maps search for your chosen area. "
-        "It does not access GPS or verify pharmacy stock, opening hours "
-        "or distance."
+        "Opens a Google Maps search. MediBill does not read GPS or "
+        "verify opening hours, stock or distance."
     )
 
     st.link_button(
-        "Search Pharmacies on Google Maps",
-        create_maps_url(map_location),
-        use_container_width=True
+        "Search pharmacies on Google Maps",
+        maps_url(search_location),
+        use_container_width=True,
     )
 
-    st.markdown("### Online Pharmacy Websites")
+    st.markdown("#### Online pharmacy websites")
+    st.markdown("- [Tata 1mg](https://www.1mg.com/)")
+    st.markdown("- [PharmEasy](https://pharmeasy.in/)")
+    st.markdown("- [Apollo 24|7](https://www.apollo247.com/)")
 
-    st.markdown("[Tata 1mg](https://www.1mg.com/)")
-    st.markdown("[PharmEasy](https://pharmeasy.in/)")
-    st.markdown("[Apollo 24|7](https://www.apollo247.com/)")
 
-
-# ============================================================
+# ------------------------------------------------------------
 # FOOTER
-# ============================================================
-
+# ------------------------------------------------------------
 st.markdown("---")
 
 st.caption(
-    f"MediBill academic demonstration · {len(PRODUCTS)} catalogue entries · "
-    f"{len(BUNDLES)} sample bundles. "
-    "Prices and provider comparisons are illustrative. "
-    "This application does not process payments, verify live stock, "
-    "or provide medical advice. It is not a real tax invoice."
+    f"Demo catalogue: {len(PRODUCTS)} entries across multiple companies. "
+    "All catalogue prices, tax settings, bundles and provider estimates "
+    "are illustrative. This is not a real tax invoice, does not process "
+    "payments, and does not provide medical advice. Confirm product "
+    "suitability and current information with a licensed pharmacist or provider."
 )
