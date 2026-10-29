@@ -1,4 +1,4 @@
-import streamlit as st
+mport streamlit as st
 import pandas as pd
 from datetime import datetime
 from urllib.parse import quote_plus
@@ -33,6 +33,8 @@ div.stButton>button,div.stDownloadButton>button {{border-radius:8px;font-weight:
 </style>
 <div class="hero"><h1>MediBill</h1><p>Pharmacy catalogue, live billing, basket comparison and a classic paper-style receipt.</p></div>
 """, unsafe_allow_html=True)
+
+st.image("a_wide_detailed_ui_mockup_screenshot_of_a_modern.png", caption="MediBill visual concept: medicine catalogue, paper-style receipt, bundles and price comparison", use_container_width=True)
 
 # Educational catalogue with 56 products across multiple manufacturers.
 # Names and prices are examples for a classroom prototype, not verified current retail listings.
@@ -106,6 +108,14 @@ BUNDLES = {
     "Hydration Supplies":{"Electral":2,"ORSL":1},
     "Home Monitoring":{"Digital Thermometer":1,"Pulse Oximeter":1},
     "Everyday Personal Care":{"Vaseline Petroleum Jelly":1,"Nivea Creme":1},
+}
+
+# Product-pack images found through web image search. These external image URLs may change or be blocked.
+# Other products have a Google Images link on each catalogue card.
+PRODUCT_IMAGES = {
+    "Dolo 650": "https://d1s24u4ln0wd0i.cloudfront.net/med/3606/DOLO%20650MG%20TAB%201X15_1.webp",
+    "Electral": "https://newassets.apollo247.com/pub/media/catalog/product/e/l/ele0174_1.jpg",
+    "Band-Aid": "https://cdn.shopify.com/s/files/1/2090/1141/files/band-aid-plastic-strips-assorted-shapes-50-sterile-shapes_300x%402x.png?v=1707273151",
 }
 
 def money(value):
@@ -192,6 +202,12 @@ with shop_tab:
     product_col, receipt_col = st.columns([1.4,1], gap="large")
     with product_col:
         st.subheader("Product catalogue")
+        # General illustrative medicine-pack image. It is not a photo of every listed brand.
+        st.image(
+            "https://adaderanaenglish.s3.amazonaws.com/1742962712-drugs-6.jpg",
+            caption="Illustrative medicine packaging photo. Check the exact brand and pack on the seller's listing.",
+            use_container_width=True
+        )
         search = st.text_input("Search by brand, ingredient or company", placeholder="e.g., Dolo, Cipla, vitamin")
         categories = ["All categories"] + sorted({p["category"] for p in PRODUCTS.values()})
         category = st.selectbox("Filter category", categories)
@@ -205,10 +221,24 @@ with shop_tab:
                 item = PRODUCTS[name]
                 with cols[idx]:
                     with st.container(border=True):
+                        if name in PRODUCT_IMAGES:
+                            st.image(PRODUCT_IMAGES[name], use_container_width=True)
+                        else:
+                            st.markdown(
+                                f"<div style='height:105px;display:flex;align-items:center;justify-content:center;"
+                                f"background:#F8FAFC;border:1px solid {BORDER};border-radius:8px;color:#64748B;"
+                                f"font-size:12px;text-align:center;padding:8px'>Product pack image<br>Use Google Images link below</div>",
+                                unsafe_allow_html=True
+                            )
                         st.markdown(f"**{name}**")
                         st.caption(item["generic"])
                         st.markdown(f"<span style='color:{TEAL};font-weight:700'>{money(item['price'])}</span>", unsafe_allow_html=True)
                         st.caption(f"{item['company']} · {item['category']}")
+                        image_query = quote_plus(f"{name} {item['company']} medicine packaging")
+                        st.markdown(
+                            f"[View product images on Google Images](https://www.google.com/search?tbm=isch&q={image_query})",
+                            help="Opens a Google Images search for this product name. Verify the exact brand, strength and pack size."
+                        )
                         st.number_input("Quantity", min_value=0, max_value=100, step=1, key="qty_" + name)
     with receipt_col:
         cart = {n:int(st.session_state["qty_"+n]) for n in PRODUCTS if int(st.session_state["qty_"+n]) > 0}
