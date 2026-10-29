@@ -3,11 +3,48 @@ import pandas as pd
 from datetime import datetime
 from urllib.parse import quote_plus
 import html
+from pathlib import Path
 
 st.set_page_config(page_title="MediBill | Pharmacy Billing", layout="wide")
 
 NAVY, BLUE, TEAL = "#17324D", "#2563EB", "#0F766E"
 BORDER, INK, MUTED = "#D7DEE7", "#20262E", "#64748B"
+
+# Local images live in the assets/ folder beside this app.py file.
+ASSET_DIR = Path(__file__).parent / "assets"
+
+def asset_path(filename):
+    """Return a local asset path only when the file exists."""
+    path = ASSET_DIR / filename
+    return str(path) if path.is_file() else None
+
+# Product image mapping. Products without a dedicated image use a category image.
+PRODUCT_IMAGES = {
+    "Digital Thermometer": "digital_thermometer.png",
+    "Pulse Oximeter": "pulse_oximeter.png",
+    "Limcee": "vitamin_c.png",
+    "Celin 500": "vitamin_c.png",
+    "Electral": "ors_packet.png",
+    "ORS Powder": "ors_packet.png",
+    "Digene": "antacid_gaviscon.png",
+    "Gelusil": "antacid_gaviscon.png",
+    "Band-Aid": "first_aid_bandage.png",
+    "Hansaplast": "first_aid_bandage.png",
+    "Vaseline Petroleum Jelly": "petroleum_jelly.png",
+}
+CATEGORY_IMAGES = {
+    "Pain relief": "medicine_blister_packs.png",
+    "Allergy care": "medicine_blister_packs.png",
+    "Cold care": "medicine_blister_packs.png",
+    "Throat care": "medicine_capsules.png",
+    "Cough care": "medicine_capsules.png",
+    "Digestive care": "antacid_gaviscon.png",
+    "Hydration": "ors_packet.png",
+    "Vitamins": "vitamin_c.png",
+    "First aid": "first_aid_bandage.png",
+    "Devices": "digital_thermometer.png",
+    "Personal care": "petroleum_jelly.png",
+}
 
 st.markdown(f"""
 <style>
@@ -31,8 +68,16 @@ div.stButton>button,div.stDownloadButton>button {{border-radius:8px;font-weight:
 .paper-bill .num {{text-align:right;white-space:nowrap;}}
 .paper-total {{text-align:right;font-weight:bold;font-size:14px;margin-top:8px;}}
 </style>
-<div class="hero"><h1>MediBill</h1><p>Pharmacy catalogue, live billing, basket comparison and a classic paper-style receipt.</p></div>
 """, unsafe_allow_html=True)
+
+# Optional homepage banner image. If the image is absent, the app still works normally.
+banner = asset_path("pharmacy_interior.png")
+if banner:
+    st.image(banner, use_container_width=True)
+st.markdown(
+    f'<div class="hero"><h1>MediBill</h1><p>Pharmacy catalogue, live billing, basket comparison and a classic paper-style receipt.</p></div>',
+    unsafe_allow_html=True,
+)
 
 # Educational catalogue with 56 products across multiple manufacturers.
 # Names and prices are examples for a classroom prototype, not verified current retail listings.
@@ -131,6 +176,12 @@ def add_bundle(items):
         key = "qty_" + name
         st.session_state[key] = min(100, int(st.session_state.get(key, 0)) + qty)
 
+def clear_cart():
+    # Callbacks run before widgets are rebuilt, so their state can be safely reset.
+    for name in PRODUCTS:
+        st.session_state["qty_" + name] = 0
+    st.session_state.invoice_no = "MB" + datetime.now().strftime("%y%m%d%H%M")
+
 def receipt_html(cart, bill, discount_label, delivery_label, invoice):
     now = datetime.now().strftime("%d-%m-%Y %H:%M")
     rows = ""
@@ -205,6 +256,10 @@ with shop_tab:
                 item = PRODUCTS[name]
                 with cols[idx]:
                     with st.container(border=True):
+                        image_file = PRODUCT_IMAGES.get(name) or CATEGORY_IMAGES.get(item["category"])
+                        image_path = asset_path(image_file) if image_file else None
+                        if image_path:
+                            st.image(image_path, use_container_width=True)
                         st.markdown(f"**{name}**")
                         st.caption(item["generic"])
                         st.markdown(f"<span style='color:{TEAL};font-weight:700'>{money(item['price'])}</span>", unsafe_allow_html=True)
@@ -230,11 +285,7 @@ with shop_tab:
             ]
             st.download_button("Download itemised receipt (CSV)", pd.DataFrame(rows).to_csv(index=False).encode("utf-8"),
                 file_name=f"medibill_{st.session_state.invoice_no}.csv", mime="text/csv", use_container_width=True)
-        if st.button("Clear cart", use_container_width=True):
-            for name in PRODUCTS:
-                st.session_state["qty_"+name] = 0
-            st.session_state.invoice_no = "MB" + datetime.now().strftime("%y%m%d%H%M")
-            st.rerun()
+        st.button("Clear cart", use_container_width=True, on_click=clear_cart)
 
 with bundles_tab:
     st.subheader("Convenience bundles")
@@ -243,15 +294,28 @@ with bundles_tab:
     for i,(bundle_name,items) in enumerate(BUNDLES.items()):
         with cols[i%2]:
             with st.container(border=True):
+                bundle_image = {
+                    "First-Aid Basics": "first_aid_bandage.png",
+                    "Hydration Supplies": "ors_packet.png",
+                    "Home Monitoring": "digital_thermometer.png",
+                    "Everyday Personal Care": "petroleum_jelly.png",
+                }.get(bundle_name)
+                bundle_image_path = asset_path(bundle_image) if bundle_image else None
+                if bundle_image_path:
+                    st.image(bundle_image_path, use_container_width=True)
                 st.markdown(f"#### {bundle_name}")
                 total = sum(PRODUCTS[n]["price"]*q for n,q in items.items())
                 st.markdown(f"**Sample bundle total: {money(total*0.95)}**")
                 st.caption("Includes an illustrative 5% bundle discount.")
                 for name,qty in items.items():
                     st.write(f"- {name} × {qty}")
-                if st.button("Add bundle to cart", key="bundle_"+bundle_name, use_container_width=True):
-                    add_bundle(items)
-                    st.success("Items added. Return to Products & paper bill to review.")
+                st.button(
+                    "Add bundle to cart",
+                    key="bundle_" + bundle_name,
+                    use_container_width=True,
+                    on_click=add_bundle,
+                    args=(items,),
+                )
     st.info("A genuine frequently-bought-together feature would require anonymised transaction data. This prototype uses predefined bundles.")
 
 with compare_tab:
